@@ -1,0 +1,480 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Helvetica Neue LT Pro Ex";
+  src: url("/fonts/HelveticaNeueLTPro-Ex.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Helvetica Neue LT Pro Ex";
+  src: url("/fonts/HelveticaNeueLTPro-Md.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Helvetica Neue LT Pro Roman";
+  src: url("/fonts/HelveticaNeueLTPro-Roman.woff2") format("woff2");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: block;
+}
+
+@theme {
+  /* 1px spacing scale matches Figma's 430x930 mobile frames 1:1 without arbitrary values */
+  --spacing: 1px;
+
+  /* Semantic surfaces */
+  --color-stage: #0e0d0c;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f4f2;
+  --color-surface-tabs: #333333;
+  --color-surface-portrait: #bfb4ab;
+  --color-surface-orb: #4b3a2d;
+  --color-surface-orb-glow: #8b786a;
+  --color-surface-sheet: #5e4b3c;
+  --color-surface-sheet-wash: rgba(0, 0, 0, 0.2);
+  --color-surface-tile: rgba(0, 0, 0, 0.12);
+  --color-surface-tile-hover: rgba(255, 255, 255, 0.16);
+  --color-surface-dock: rgba(0, 0, 0, 0.38);
+  --color-surface-selector: rgba(20, 19, 18, 0.86);
+  --color-surface-scrim: rgba(0, 0, 0, 0.68);
+  --color-surface-modal-scrim: rgba(0, 0, 0, 0.6);
+  --color-surface-recommend: #427e2b;
+  --color-surface-scrollbar: rgba(225, 225, 225, 0.75);
+
+  /* Semantic ink / text */
+  --color-ink: #000000;
+  --color-ink-primary: #000003;
+  --color-ink-charcoal: #333333;
+  --color-ink-muted: #6d6d6d;
+  --color-ink-subtle: #949494;
+  --color-ink-inverse: #ffffff;
+  --color-ink-inverse-muted: rgba(255, 255, 255, 0.6);
+  --color-ink-inverse-soft: rgba(255, 255, 255, 0.78);
+
+  /* Semantic borders */
+  --color-border-strong: #000000;
+  --color-border-search: #949494;
+  --color-border-chip: #c5c5c5;
+  --color-border-subtle: #e1e1e1;
+  --color-border-faint: #f0f0f0;
+  --color-border-glass: rgba(255, 255, 255, 0.4);
+  --color-border-divider: rgba(255, 255, 255, 0.2);
+  --color-border-dock: rgba(255, 255, 255, 0.1);
+  --color-stroke-ai-cyan: #16e2ed;
+  --color-stroke-ai-gold: #eda916;
+  --color-stroke-ai-magenta: #ed16cd;
+
+  /* Typography */
+  --font-sans: "Helvetica Neue LT Pro Ex", "Helvetica Neue", system-ui, sans-serif;
+  --font-roman: "Helvetica Neue LT Pro Roman", "Helvetica Neue", system-ui, sans-serif;
+
+  --text-micro: 10px;
+  --text-micro--line-height: 1.4;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.25;
+  --text-body: 14px;
+  --text-body--line-height: 1.25;
+  --text-subhead: 16px;
+  --text-subhead--line-height: 1.25;
+  --text-title: 20px;
+  --text-title--line-height: 1.25;
+  --text-heading: 24px;
+  --text-heading--line-height: 1.2;
+
+  --tracking-tight-title: -0.4px;
+  --tracking-xs: 0.2px;
+  --tracking-sm: 0.4px;
+  --tracking-items: 2px;
+
+  /* Radii */
+  --radius-sharp: 2px;
+  --radius-slot: 4px;
+  --radius-card: 5px;
+  --radius-tile: 8px;
+  --radius-bubble: 10px;
+  --radius-stage: 14px;
+  --radius-sheet: 20px;
+  --radius-dock: 30px;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-fab: 0 6px 15px rgba(0, 0, 0, 0.16);
+  --shadow-resume-pill: 0 2px 5px rgba(0, 0, 0, 0.06);
+  --shadow-scroll-cue: 0 15px 12px rgba(52, 39, 29, 0.65);
+  --shadow-bubble: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-send-glow: 0 4px 14px rgba(217, 150, 113, 0.55);
+
+  /* Motion curves & subtle optical blur token */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --blur-subtle: 2px;
+}
+
+/* Single-cell CSS Grid overlap eliminates unnecessary position: relative / absolute */
+@utility stack-grid {
+  display: grid;
+  grid-template-areas: "stack";
+}
+
+@utility stack-cell {
+  grid-area: stack;
+}
+
+/* Tactile press feedback & interruptible interactive transitions */
+@utility transition-stage-inset {
+  transition-property: padding-top;
+  transition-duration: 800ms;
+  transition-timing-function: var(--ease-premium);
+}
+
+@utility press-scale {
+  transition-property: scale, background-color, border-color, color;
+  transition-duration: 240ms;
+  transition-timing-function: var(--ease-premium);
+  &:active {
+    scale: 0.96;
+  }
+}
+
+@utility disclosure-grid {
+  display: grid;
+  transition-property: grid-template-rows, opacity, filter;
+  transition-timing-function: var(--ease-premium);
+}
+
+@utility disclosure-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  filter: blur(0px);
+  transition-duration: 800ms;
+}
+
+@utility disclosure-closed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  filter: blur(4px);
+  transition-duration: 580ms;
+}
+
+@utility image-outline {
+  outline: 1px solid oklch(0 0 0 / 0.08);
+  outline-offset: -1px;
+}
+
+@utility sheet-radial-sheen {
+  background-image: radial-gradient(
+    ellipse 280px 380px at 58% 0%,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+@utility send-orb-halo {
+  background-image: linear-gradient(135deg, #57453b 0%, #9a6a3f 50%, #d99671 100%);
+  filter: blur(5.5px);
+  transition-property: opacity, scale;
+  transition-duration: 300ms;
+  transition-timing-function: var(--ease-premium);
+}
+
+@utility transition-icon-invert {
+  transition-property: filter, scale;
+  transition-duration: 220ms;
+  transition-timing-function: var(--ease-premium);
+}
+
+@property --resume-stroke-angle {
+  syntax: "<angle>";
+  initial-value: 270deg;
+  inherits: false;
+}
+
+@keyframes resume-stroke-glide {
+  from {
+    --resume-stroke-angle: 270deg;
+  }
+  to {
+    --resume-stroke-angle: 630deg;
+  }
+}
+
+@utility resume-ai-glow {
+  background-image: conic-gradient(
+    from var(--resume-stroke-angle) at 50% 50%,
+    transparent 4%,
+    var(--color-stroke-ai-cyan) 24%,
+    var(--color-stroke-ai-gold) 50%,
+    var(--color-stroke-ai-magenta) 76%,
+    transparent 96%
+  );
+  filter: blur(13px) saturate(1.6);
+  opacity: 0.76;
+  scale: 1.05 1.22;
+  translate: 0 5px;
+  animation: resume-stroke-glide 4.6s linear infinite;
+}
+
+@utility resume-ai-pill {
+  padding: 1.5px;
+  background-image: conic-gradient(
+    from var(--resume-stroke-angle) at 50% 50%,
+    var(--color-ink) 0%,
+    var(--color-stroke-ai-cyan) 25%,
+    var(--color-stroke-ai-gold) 50%,
+    var(--color-stroke-ai-magenta) 75%,
+    var(--color-ink) 100%
+  );
+  animation: resume-stroke-glide 4.6s linear infinite;
+}
+
+/* Smooth opacity feather masks at top/bottom scroll boundaries (paired with ProgressiveBlurEdge) */
+@utility scroll-mask-bottom {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000000 0%,
+    #000000 calc(100% - 36px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000000 0%,
+    #000000 calc(100% - 36px),
+    transparent 100%
+  );
+}
+
+@utility scroll-mask-top {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000000 32px,
+    #000000 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000000 32px,
+    #000000 100%
+  );
+}
+
+@utility scroll-mask-both {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000000 32px,
+    #000000 calc(100% - 36px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000000 32px,
+    #000000 calc(100% - 36px),
+    transparent 100%
+  );
+}
+
+@utility name-fade-right {
+  background-image: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    #ffffff 82%
+  );
+}
+
+@utility subnav-fade-right {
+  background-image: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    #ffffff 88%
+  );
+}
+
+/* Liquid orb slow organic drift keyframes (staged visual ambient loop) */
+@keyframes orb-lobe-spin-cw {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.06);
+  }
+  to {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes orb-lobe-spin-ccw {
+  from {
+    transform: rotate(360deg) scale(1.04);
+  }
+  50% {
+    transform: rotate(180deg) scale(0.96);
+  }
+  to {
+    transform: rotate(0deg) scale(1.04);
+  }
+}
+
+@keyframes orb-liquid-morph {
+  0%,
+  100% {
+    border-radius: 52% 48% 51% 49% / 49% 53% 47% 51%;
+  }
+  33% {
+    border-radius: 47% 53% 48% 52% / 53% 48% 52% 47%;
+  }
+  66% {
+    border-radius: 54% 46% 53% 47% / 48% 51% 49% 52%;
+  }
+}
+
+@keyframes typing-dot-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+@utility animate-orb-cw {
+  animation: orb-lobe-spin-cw 11s ease-in-out infinite;
+}
+
+@utility animate-orb-cw-fast {
+  animation: orb-lobe-spin-cw 4.2s ease-in-out infinite;
+}
+
+@utility animate-orb-ccw {
+  animation: orb-lobe-spin-ccw 14s ease-in-out infinite;
+}
+
+@utility animate-orb-ccw-fast {
+  animation: orb-lobe-spin-ccw 5.4s ease-in-out infinite;
+}
+
+@utility animate-orb-morph {
+  animation: orb-liquid-morph 7s ease-in-out infinite;
+}
+
+@utility animate-orb-morph-fast {
+  animation: orb-liquid-morph 2.8s ease-in-out infinite;
+}
+
+@utility animate-dot-1 {
+  animation: typing-dot-bounce 1.2s ease-in-out infinite;
+}
+
+@utility animate-dot-2 {
+  animation: typing-dot-bounce 1.2s ease-in-out 0.16s infinite;
+}
+
+@utility animate-dot-3 {
+  animation: typing-dot-bounce 1.2s ease-in-out 0.32s infinite;
+}
+
+/* Subtle custom scrollbars inside sheet */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility sheet-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(225, 225, 225, 0.7) transparent;
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(225, 225, 225, 0.75);
+    border-radius: 2px;
+  }
+}
+
+@utility mobile-viewport-lock {
+  width: 100%;
+  height: 100dvh;
+  margin-inline: auto;
+  @media (min-width: 481px) {
+    max-width: 430px;
+  }
+}
+
+@utility pb-safe-overlay {
+  padding-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
+}
+
+@utility pb-safe-dock {
+  padding-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  /* Explicit non-transparent page fill on html + body for Safari 26 toolbar sampling */
+  html,
+  body {
+    background-color: var(--color-surface);
+  }
+
+  @media (min-width: 481px) {
+    html,
+    body {
+      background-color: var(--color-stage);
+    }
+  }
+
+  body {
+    margin: 0;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+  }
+
+  button {
+    appearance: none;
+    border: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  input,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+}
