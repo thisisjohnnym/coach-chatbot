@@ -112,8 +112,8 @@ vercel inspect https://coach-chatbot.vercel.app
 # Verify HTTP 200 on production
 curl -sI https://coach-chatbot.vercel.app | head -n 5
 
-# View runtime/build error logs
-vercel logs https://coach-chatbot.vercel.app
+# View recent production error logs (non-streaming)
+vercel logs --environment production --level error --since 1h --scope thisisjohnnym-9611s-projects
 
 # Roll back production to the previous deployment
 vercel rollback --scope thisisjohnnym-9611s-projects --yes
