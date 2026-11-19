@@ -206,34 +206,31 @@ export function AssistantSheetShell({
                           ease: EASE_PREMIUM,
                         }
                   }
-                  className="px-16 py-16 flex flex-row items-center justify-between w-full shrink-0 z-20"
+                  className="pl-10 pr-14 py-20 flex flex-row items-center justify-between w-full shrink-0 z-20"
                 >
-                  <Cluster className="gap-6 py-4 px-4">
+                  <Cluster className="gap-5">
                     <img
                       src="/assets/figma/sparkle-white.svg"
                       alt=""
-                      width={18}
-                      height={18}
-                      className="w-18 h-18 shrink-0"
+                      className="shrink-0"
                     />
                     <Box
                       as="span"
-                      className="text-body text-ink-inverse tracking-xs pt-1 whitespace-nowrap"
+                      className="text-body text-ink-inverse tracking-xs pt-3 whitespace-nowrap"
                     >
                       Ask Coach AI
                     </Box>
                   </Cluster>
 
-                  <Cluster className="gap-10">
+                  <Cluster className="gap-10 h-21 shrink-0">
                     <AnimatePresence
                       mode="wait"
                       custom={isTypingFocused}
                       initial={staggerChrome ? undefined : false}
                     >
                       {showNewChat && (
-                        <motion.button
+                        <motion.div
                           key="new-chat-cta"
-                          type="button"
                           variants={newChatCtaVariants}
                           custom={isTypingFocused}
                           initial={prefersReducedMotion ? false : "hidden"}
@@ -253,23 +250,38 @@ export function AssistantSheetShell({
                                 }
                           }
                           exit="exit"
-                          onClick={onNewChat}
-                          className="bg-surface text-ink h-36 px-12 py-6 rounded-pill flex flex-row items-center gap-4 press-scale motion-reduce:transition-none"
+                          className="flex flex-row items-center gap-10"
                         >
-                          <img
-                            src="/assets/figma/icon-add-newchat.svg"
-                            alt=""
-                            width={18}
-                            height={18}
-                            className="w-18 h-18 shrink-0"
-                          />
+                          <Box
+                            as="button"
+                            type="button"
+                            onClick={onNewChat}
+                            className="text-ink-inverse h-32 pr-6 py-6 rounded-pill flex flex-row items-center gap-4 press-scale motion-reduce:transition-none"
+                          >
+                            <Box
+                              as="span"
+                              className="w-18 h-18 flex items-center justify-center shrink-0"
+                            >
+                              <img
+                                src="/assets/figma/icon-edit-newchat.svg"
+                                alt=""
+                                className="max-w-none shrink-0"
+                              />
+                            </Box>
+                            <Box
+                              as="span"
+                              className="text-body text-ink-inverse tracking-xs pt-3 whitespace-nowrap"
+                            >
+                              New Chat
+                            </Box>
+                          </Box>
+
                           <Box
                             as="span"
-                            className="text-caption text-ink tracking-xs pt-1 whitespace-nowrap"
-                          >
-                            New Chat
-                          </Box>
-                        </motion.button>
+                            aria-hidden="true"
+                            className="w-px h-18 bg-surface opacity-50 shrink-0"
+                          />
+                        </motion.div>
                       )}
                     </AnimatePresence>
 
@@ -279,14 +291,12 @@ export function AssistantSheetShell({
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={onClose}
                       aria-label="Close Ask Coach AI"
-                      className="w-36 h-36 rounded-pill bg-surface flex items-center justify-center press-scale motion-reduce:transition-none"
+                      className="p-6 rounded-pill flex items-center justify-center shrink-0 press-scale motion-reduce:transition-none"
                     >
                       <img
                         src="/assets/figma/icon-close-sheet.svg"
                         alt=""
-                        width={20}
-                        height={20}
-                        className="w-20 h-20"
+                        className="shrink-0"
                       />
                     </Box>
                   </Cluster>
