@@ -2,8 +2,11 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { AnimatePresence, motion } from "motion/react";
 import clsx from "clsx";
 import {
+  DEFAULT_RECENT_COMPARE_BAGS,
   findMentionedBagsInPrompt,
   getCannedReplyForPrompt,
+  getCompareSpotCopy,
+  OUTFIT_STARTER_PROMPT,
   STATEMENT_PROMPT,
   type BagProduct,
   type ContentSpotMode,
@@ -33,7 +36,9 @@ import {
   type ThreadTurn,
 } from "./components/ChatThreadView";
 import type { CompareThreadTurn } from "./components/CompareFlowView";
+import type { OutfitThreadTurn } from "./components/OutfitFlowView";
 import { ProductPickerModal } from "./components/ProductPickerModal";
+import { ProductDetailModal } from "./components/ProductDetailModal";
 
 type ActiveSheetView = "cold-start" | "exiting-cold-start" | "thread" | "transitioning-reset";
 
@@ -62,7 +67,9 @@ export function App() {
   const [contentSpotMode, setContentSpotMode] = useState<ContentSpotMode>(() => {
     if (typeof window !== "undefined") {
       const param = new URLSearchParams(window.location.search).get("spot");
-      if (param === "prompted" || param === "general") return param;
+      if (param === "prompted" || param === "general" || param === "compare") {
+        return param;
+      }
     }
     return "general";
   });
@@ -133,9 +140,25 @@ export function App() {
   // Unified multi-turn thread (ChatMessageTurn | CompareThreadTurn)
   const [turns, setTurns] = useState<ThreadTurn[]>([]);
   const [inputValue, setInputValue] = useState("");
-  const [resumeDismissed, setResumeDismissed] = useState(false);
+  const [hasClosedSheet, setHasClosedSheet] = useState(false);
   const [resumePillReady, setResumePillReady] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<ActivePickerTarget | null>(null);
+  const [detailBag, setDetailBag] = useState<BagProduct | null>(null);
+  const [bagIdsInCart, setBagIdsInCart] = useState<string[]>([]);
+  const [recentlyViewedBags, setRecentlyViewedBags] = useState<
+    [BagProduct, BagProduct]
+  >(DEFAULT_RECENT_COMPARE_BAGS);
+
+  const recordViewedBag = useCallback((bag: BagProduct) => {
+    setRecentlyViewedBags((prev) => {
+      const filtered = prev.filter((item) => item.id !== bag.id);
+      const updated = [...filtered, bag];
+      return [
+        updated[updated.length - 2] ?? prev[0],
+        updated[updated.length - 1] ?? bag,
+      ];
+    });
+  }, []);
 
   const clearVoiceTimers = useCallback(() => {
     voiceTimersRef.current.forEach((id) => window.clearTimeout(id));
@@ -157,9 +180,10 @@ export function App() {
   }, []);
 
   const hasResumableSession = turns.length > 0;
+  const shouldShowRecoveryPill = hasResumableSession || hasClosedSheet;
 
   useEffect(() => {
-    if (sheetOpen || !hasResumableSession || resumeDismissed) {
+    if (sheetOpen || !shouldShowRecoveryPill) {
       setResumePillReady(false);
       return;
     }
@@ -171,20 +195,23 @@ export function App() {
     return () => {
       window.clearTimeout(timerId);
     };
-  }, [sheetOpen, hasResumableSession, resumeDismissed]);
+  }, [sheetOpen, shouldShowRecoveryPill]);
 
   const firstTurn = turns[0];
   const isFirstTurnActiveThinking =
     turns.length === 1 &&
     Boolean(firstTurn) &&
     ((firstTurn.kind === "chat" && firstTurn.status === "thinking") ||
-      (firstTurn.kind === "compare" && firstTurn.stage === "loading"));
+      (firstTurn.kind === "compare" && firstTurn.stage === "loading") ||
+      (firstTurn.kind === "outfit" && firstTurn.stage === "loading"));
 
   const isFirstTurnPreAnswer =
     turns.length === 1 &&
     Boolean(firstTurn) &&
     ((firstTurn.kind === "chat" && firstTurn.status !== "answered") ||
       (firstTurn.kind === "compare" &&
+        (firstTurn.stage === "loading" || firstTurn.stage === "exiting-loading")) ||
+      (firstTurn.kind === "outfit" &&
         (firstTurn.stage === "loading" || firstTurn.stage === "exiting-loading")));
 
   // Persistent LiquidOrb state:
@@ -230,6 +257,7 @@ export function App() {
       setIsInitialOpenStagger(false);
       setIsExpandingFromSubmit(false);
       setPickerTarget(null);
+      setDetailBag(null);
     }
   }, []);
 
@@ -250,8 +278,13 @@ export function App() {
       replaceThread: boolean;
       userPrompt?: string;
       showUserBubble?: boolean;
+      showCompareIcon?: boolean;
+      prefilledFromRecent?: boolean;
+      interactionMode?: "interactive-slots" | "direct-pair";
       anchorChoiceGroupKey?: string;
       fromColdStart: boolean;
+      openingSheetNow?: boolean;
+      withThinkingOrb?: boolean;
       preselectedA?: BagProduct | null;
       preselectedB?: BagProduct | null;
     }) => {
@@ -259,8 +292,13 @@ export function App() {
         replaceThread,
         userPrompt = "Help me compare bags",
         showUserBubble = true,
+        showCompareIcon,
+        prefilledFromRecent = false,
+        interactionMode,
         anchorChoiceGroupKey,
         fromColdStart,
+        openingSheetNow = false,
+        withThinkingOrb,
         preselectedA = null,
         preselectedB = null,
       } = options;
@@ -270,15 +308,20 @@ export function App() {
       }
 
       const turnId = `compare-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-      const isDirectPair = Boolean(preselectedA && preselectedB);
+      const resolvedMode =
+        interactionMode ??
+        (preselectedA && preselectedB ? "direct-pair" : "interactive-slots");
+      const isDirectPair = resolvedMode === "direct-pair";
 
       const newTurn: CompareThreadTurn = {
         kind: "compare",
         id: turnId,
         userPrompt,
         showUserBubble,
+        showCompareIcon,
+        prefilledFromRecent,
         anchorChoiceGroupKey,
-        mode: isDirectPair ? "direct-pair" : "interactive-slots",
+        mode: resolvedMode,
         stage: isDirectPair ? "compared" : "loading",
         slotA: preselectedA,
         slotB: preselectedB,
@@ -288,8 +331,8 @@ export function App() {
       };
 
       setEnteredFromColdStart(fromColdStart);
-      setIsInitialExchange(!isDirectPair && replaceThread);
-      setIsInitialOpenStagger(false);
+      setIsInitialExchange(withThinkingOrb ?? (!isDirectPair && replaceThread));
+      setIsInitialOpenStagger(openingSheetNow);
       setActiveView("thread");
       setFloatingVisible(false);
       setSheetOpen(true);
@@ -299,14 +342,72 @@ export function App() {
         return;
       }
 
-      // Let 800ms Loading entrance settle, then AnimatePresence mode="wait" exits Loading in sync with Orb before mounting Compare Slots!
-      const startExitAt = 1280;
+      // Let Loading entrance settle, then AnimatePresence mode="wait" exits Loading in sync with Orb before mounting Compare Slots!
+      const openOffset = openingSheetNow ? 280 : 0;
+      const startExitAt = openOffset + 1280;
       scheduleTimer(() => {
         setIsInitialExchange(false);
         setTurns((prev) =>
           prev.map((t): ThreadTurn =>
             t.id === turnId && t.kind === "compare"
               ? { ...t, stage: "selecting" as const }
+              : t
+          )
+        );
+      }, startExitAt);
+    },
+    [scheduleTimer]
+  );
+
+  const enqueueOutfitTurn = useCallback(
+    (options: {
+      replaceThread: boolean;
+      userPrompt?: string;
+      showUserBubble?: boolean;
+      anchorChoiceGroupKey?: string;
+      fromColdStart: boolean;
+    }) => {
+      const {
+        replaceThread,
+        userPrompt = OUTFIT_STARTER_PROMPT,
+        showUserBubble = true,
+        anchorChoiceGroupKey,
+        fromColdStart,
+      } = options;
+
+      if (replaceThread) {
+        resetSeenChatTurnIds();
+      }
+
+      const turnId = `outfit-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+      const newTurn: OutfitThreadTurn = {
+        kind: "outfit",
+        id: turnId,
+        userPrompt,
+        showUserBubble,
+        anchorChoiceGroupKey,
+        stage: "loading",
+        selfiePicked: false,
+        selectedOptions: [],
+        feedback: null,
+      };
+
+      setEnteredFromColdStart(fromColdStart);
+      setIsInitialExchange(replaceThread);
+      setIsInitialOpenStagger(false);
+      setActiveView("thread");
+      setFloatingVisible(false);
+      setSheetOpen(true);
+      setTurns((prev) => (replaceThread ? [newTurn] : [...prev, newTurn]));
+
+      const startExitAt = 1280;
+      scheduleTimer(() => {
+        setIsInitialExchange(false);
+        setTurns((prev) =>
+          prev.map((t): ThreadTurn =>
+            t.id === turnId && t.kind === "outfit"
+              ? { ...t, stage: "awaiting-selfie" as const }
               : t
           )
         );
@@ -422,8 +523,8 @@ export function App() {
         }, TYPING_STAGE_SETTLE_MS);
       }
       setInputValue("");
-      setResumeDismissed(false);
       setPickerTarget(null);
+      setDetailBag(null);
 
       const runDispatch = () => {
         const lower = trimmed.toLowerCase();
@@ -445,6 +546,22 @@ export function App() {
             });
             return;
           }
+        }
+
+        if (
+          lower === "match a bag to my outfit" ||
+          lower.includes("match my look") ||
+          lower.includes("match a bag to my") ||
+          lower.includes("match my outfit")
+        ) {
+          enqueueOutfitTurn({
+            replaceThread,
+            userPrompt: trimmed,
+            showUserBubble,
+            anchorChoiceGroupKey,
+            fromColdStart,
+          });
+          return;
         }
 
         enqueueChatTurn(trimmed, {
@@ -476,6 +593,7 @@ export function App() {
       clearPendingTimers,
       enqueueChatTurn,
       enqueueCompareTurn,
+      enqueueOutfitTurn,
       enteredFromColdStart,
       scheduleTimer,
       sheetOpen,
@@ -489,8 +607,8 @@ export function App() {
       isTypingFocusedRef.current = false;
       setIsTypingFocused(false);
       setIsExpandingFromSubmit(false);
-      setResumeDismissed(false);
       setPickerTarget(null);
+      setDetailBag(null);
       setSelectedStarterId(null);
       setCraftSessionId((s) => s + 1);
       setOrbBloomKey((k) => k + 1);
@@ -503,6 +621,21 @@ export function App() {
           openingSheetNow: true,
           withThinkingOrb: true,
         });
+      } else if (mode === "compare") {
+        const compareCopy = getCompareSpotCopy(recentlyViewedBags);
+        enqueueCompareTurn({
+          replaceThread: true,
+          userPrompt: compareCopy.userPrompt,
+          showUserBubble: true,
+          showCompareIcon: true,
+          prefilledFromRecent: true,
+          interactionMode: "interactive-slots",
+          fromColdStart: false,
+          openingSheetNow: true,
+          withThinkingOrb: true,
+          preselectedA: recentlyViewedBags[0],
+          preselectedB: recentlyViewedBags[1],
+        });
       } else {
         resetSeenChatTurnIds();
         setTurns([]);
@@ -513,7 +646,7 @@ export function App() {
         setSheetOpen(true);
       }
     },
-    [clearPendingTimers, submitPrompt]
+    [clearPendingTimers, enqueueCompareTurn, recentlyViewedBags, submitPrompt]
   );
 
   const handleNewChat = useCallback(() => {
@@ -523,6 +656,7 @@ export function App() {
     setIsExpandingFromSubmit(false);
     inputRef.current?.blur();
     setPickerTarget(null);
+    setDetailBag(null);
     setSelectedStarterId(null);
     setIsInitialExchange(false);
 
@@ -548,6 +682,8 @@ export function App() {
     closingSheetRef.current = true;
     inputRef.current?.blur();
     setPickerTarget(null);
+    setDetailBag(null);
+    setHasClosedSheet(true);
     setSheetOpen(false);
     scheduleTimer(() => {
       closingSheetRef.current = false;
@@ -568,23 +704,9 @@ export function App() {
     isTypingFocusedRef.current = false;
     setIsTypingFocused(false);
     setIsExpandingFromSubmit(false);
-    setResumeDismissed(false);
     setFloatingVisible(false);
     scheduleTimer(() => {
-      setIsInitialOpenStagger(false);
-      setSheetOpen(true);
-    }, 460);
-  }, [clearPendingTimers, scheduleTimer]);
-
-  const handleOpenFreshFromFab = useCallback(() => {
-    clearPendingTimers();
-    closingSheetRef.current = false;
-    isTypingFocusedRef.current = false;
-    setIsTypingFocused(false);
-    setIsExpandingFromSubmit(false);
-    setFloatingVisible(false);
-    scheduleTimer(() => {
-      if (hasResumableSession && !resumeDismissed) {
+      if (hasResumableSession) {
         setIsInitialOpenStagger(false);
         setSheetOpen(true);
         return;
@@ -598,7 +720,31 @@ export function App() {
       setActiveView("cold-start");
       setSheetOpen(true);
     }, 460);
-  }, [clearPendingTimers, hasResumableSession, resumeDismissed, scheduleTimer]);
+  }, [clearPendingTimers, hasResumableSession, scheduleTimer]);
+
+  const handleOpenFreshFromFab = useCallback(() => {
+    clearPendingTimers();
+    closingSheetRef.current = false;
+    isTypingFocusedRef.current = false;
+    setIsTypingFocused(false);
+    setIsExpandingFromSubmit(false);
+    setFloatingVisible(false);
+    scheduleTimer(() => {
+      if (hasResumableSession) {
+        setIsInitialOpenStagger(false);
+        setSheetOpen(true);
+        return;
+      }
+      setSelectedStarterId(null);
+      setCraftSessionId((s) => s + 1);
+      setOrbBloomKey((k) => k + 1);
+      setEnteredFromColdStart(true);
+      setIsInitialExchange(true);
+      setIsInitialOpenStagger(true);
+      setActiveView("cold-start");
+      setSheetOpen(true);
+    }, 460);
+  }, [clearPendingTimers, hasResumableSession, scheduleTimer]);
 
   const handleSelectStarter = useCallback(
     (action: StarterAction) => {
@@ -616,6 +762,11 @@ export function App() {
             replaceThread: true,
             fromColdStart: true,
           });
+        } else if (action.id === "outfit") {
+          enqueueOutfitTurn({
+            replaceThread: true,
+            fromColdStart: true,
+          });
         } else {
           enqueueChatTurn(action.label, {
             replaceThread: true,
@@ -626,7 +777,13 @@ export function App() {
         }
       }, COLD_START_SETTLE_MS);
     },
-    [clearPendingTimers, enqueueChatTurn, enqueueCompareTurn, scheduleTimer]
+    [
+      clearPendingTimers,
+      enqueueChatTurn,
+      enqueueCompareTurn,
+      enqueueOutfitTurn,
+      scheduleTimer,
+    ]
   );
 
   const handleSelectTurnOption = useCallback(
@@ -635,7 +792,7 @@ export function App() {
       if (targetIdx === -1) return;
       const targetTurn = turns[targetIdx];
       if (
-        targetTurn.kind !== "chat" ||
+        (targetTurn.kind !== "chat" && targetTurn.kind !== "outfit") ||
         targetTurn.selectedOptions.includes(option)
       ) {
         return;
@@ -644,7 +801,7 @@ export function App() {
 
       setTurns((prev) =>
         prev.map((t) =>
-          t.id === turnId && t.kind === "chat"
+          t.id === turnId && (t.kind === "chat" || t.kind === "outfit")
             ? {
                 ...t,
                 selectedOptions: [...t.selectedOptions, option],
@@ -664,6 +821,20 @@ export function App() {
     [submitPrompt, turns]
   );
 
+  const handlePickSelfie = useCallback((turnId: string) => {
+    setTurns((prev) =>
+      prev.map((t): ThreadTurn =>
+        t.id === turnId && t.kind === "outfit" && !t.selfiePicked
+          ? {
+              ...t,
+              selfiePicked: true,
+              stage: "matched" as const,
+            }
+          : t
+      )
+    );
+  }, []);
+
   const handleTurnFeedback = useCallback((turnId: string, vote: "up" | "down") => {
     setTurns((prev) =>
       prev.map((t) =>
@@ -676,16 +847,63 @@ export function App() {
 
   const handleInspectBagFromCarousel = useCallback(
     (bag: BagProduct) => {
+      recordViewedBag(bag);
       submitPrompt(`Tell me more about the ${bag.shortName}`, {
         replaceThread: false,
         fromColdStart: true,
         withThinkingOrb: false,
       });
     },
-    [submitPrompt]
+    [recordViewedBag, submitPrompt]
+  );
+
+  const handleToggleBagItem = useCallback((bag: BagProduct) => {
+    setBagIdsInCart((prev) =>
+      prev.includes(bag.id)
+        ? prev.filter((id) => id !== bag.id)
+        : [...prev, bag.id]
+    );
+  }, []);
+
+  const handleViewBagDetails = useCallback(
+    (bag: BagProduct) => {
+      recordViewedBag(bag);
+      setPickerTarget(null);
+      setDetailBag(bag);
+    },
+    [recordViewedBag]
+  );
+
+  const handleSelectBagFromPlp = useCallback(
+    (bag: BagProduct) => {
+      recordViewedBag(bag);
+      setPickerTarget(null);
+      setDetailBag(bag);
+    },
+    [recordViewedBag]
+  );
+
+  const handleCompareFromDetail = useCallback(
+    (bag: BagProduct) => {
+      setDetailBag(null);
+      const openingFromStorefront = !sheetOpen;
+      scheduleTimer(() => {
+        enqueueCompareTurn({
+          replaceThread: openingFromStorefront,
+          userPrompt: `Compare ${bag.shortName} with another bag`,
+          showUserBubble: true,
+          fromColdStart: !openingFromStorefront,
+          openingSheetNow: openingFromStorefront,
+          withThinkingOrb: openingFromStorefront,
+          preselectedA: bag,
+        });
+      }, 220);
+    },
+    [enqueueCompareTurn, scheduleTimer, sheetOpen]
   );
 
   const handleOpenComparePicker = useCallback((turnId: string, slot: "A" | "B") => {
+    setDetailBag(null);
     setPickerTarget({ turnId, slot });
   }, []);
 
@@ -915,26 +1133,42 @@ export function App() {
             scrollRef={plpScrollRef}
             contentSpotMode={contentSpotMode}
             contentSpotDismissed={contentSpotDismissed}
+            bagCount={bagIdsInCart.length}
+            recentComparePair={recentlyViewedBags}
             onOpenAssistant={handleOpenFromContentSpot}
             onDismissContentSpot={() => setContentSpotDismissed(true)}
+            onSelectBagFromGrid={handleSelectBagFromPlp}
           />
         </Layer>
 
-        {/* Layer 2: Closed Floating Controls (Resume Pill + FABs) */}
+        {/* Layer 2: Closed Floating Controls (Coach AI Pill + FABs) */}
         <Layer className="w-full h-full flex flex-col justify-end pointer-events-none isolate z-10">
           <ClosedFloatingOverlay
-            visible={!sheetOpen && floatingVisible}
-            showResumePill={
-              resumePillReady && hasResumableSession && !resumeDismissed
-            }
+            visible={!sheetOpen && floatingVisible && !detailBag}
+            showResumePill={resumePillReady && shouldShowRecoveryPill}
             contentSpotMode={contentSpotMode}
             contentSpotDismissed={contentSpotDismissed}
             onSelectSpotMode={handleSelectSpotMode}
             onResumeChat={handleResumeChat}
-            onDismissResumePill={() => setResumeDismissed(true)}
             onScrollTop={handleScrollPlpTop}
             onOpenFreshChat={handleOpenFreshFromFab}
           />
+        </Layer>
+
+        {/* Storefront Product Detail Modal when tapping products on PLP */}
+        <Layer className="w-full h-full pointer-events-none isolate z-30 stack-grid">
+          <AnimatePresence>
+            {!sheetOpen && detailBag ? (
+              <ProductDetailModal
+                key={`plp-detail-${detailBag.id}`}
+                bag={detailBag}
+                isInBag={bagIdsInCart.includes(detailBag.id)}
+                onToggleBag={handleToggleBagItem}
+                onCompareBag={handleCompareFromDetail}
+                onClose={() => setDetailBag(null)}
+              />
+            ) : null}
+          </AnimatePresence>
         </Layer>
 
         {/* Layer 3: Persistent Assistant Bottom Sheet with Non-Overlapping ~1s Spatial Stage */}
@@ -979,8 +1213,18 @@ export function App() {
                     key={`picker-${pickerTarget.turnId}-${pickerTarget.slot}`}
                     slot={pickerTarget.slot}
                     excludeBagId={excludedPickerBagId}
+                    recentBags={recentlyViewedBags}
                     onPickBag={handlePickCompareBag}
                     onClose={() => setPickerTarget(null)}
+                  />
+                ) : sheetOpen && detailBag ? (
+                  <ProductDetailModal
+                    key={`detail-${detailBag.id}`}
+                    bag={detailBag}
+                    isInBag={bagIdsInCart.includes(detailBag.id)}
+                    onToggleBag={handleToggleBagItem}
+                    onCompareBag={handleCompareFromDetail}
+                    onClose={() => setDetailBag(null)}
                   />
                 ) : null
               }
@@ -1087,9 +1331,13 @@ export function App() {
                             turns={turns}
                             steadyStage={enteredFromColdStart}
                             sheetOpenStagger={isInitialOpenStagger}
+                            bagIdsInCart={bagIdsInCart}
                             onSelectOption={handleSelectTurnOption}
                             onFeedback={handleTurnFeedback}
                             onInspectBag={handleInspectBagFromCarousel}
+                            onToggleBagItem={handleToggleBagItem}
+                            onViewBagDetails={handleViewBagDetails}
+                            onPickSelfie={handlePickSelfie}
                             onOpenComparePicker={handleOpenComparePicker}
                             onEditCompareChoices={handleEditCompareChoices}
                             onConfirmCompare={handleConfirmCompare}

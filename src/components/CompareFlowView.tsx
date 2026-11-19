@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import clsx from "clsx";
 import {
   AnimatePresence,
@@ -34,6 +34,8 @@ export interface CompareThreadTurn {
   id: string;
   userPrompt: string;
   showUserBubble: boolean;
+  showCompareIcon?: boolean;
+  prefilledFromRecent?: boolean;
   anchorChoiceGroupKey?: string;
   mode: "interactive-slots" | "direct-pair";
   stage: CompareStage;
@@ -46,6 +48,7 @@ export interface CompareThreadTurn {
 
 export interface CompareTurnItemProps {
   turn: CompareThreadTurn;
+  sheetOpenStagger?: boolean;
   registerChoiceGroupRef: (key: string, node: HTMLDivElement | null) => void;
   onRevealConfirmChoices: (turnId: string) => void;
   onOpenPicker: (turnId: string, slot: "A" | "B") => void;
@@ -69,6 +72,7 @@ export function resetSeenCompareTurnIds() {
 
 export function CompareTurnItem({
   turn,
+  sheetOpenStagger = false,
   registerChoiceGroupRef,
   onRevealConfirmChoices,
   onOpenPicker,
@@ -80,6 +84,11 @@ export function CompareTurnItem({
   onFeedback,
 }: CompareTurnItemProps) {
   const { slotA, slotB, stage, mode } = turn;
+  const initialPrefilledKeyRef = useRef<string | null>(
+    turn.prefilledFromRecent && slotA && slotB
+      ? `${slotA.id}:${slotB.id}`
+      : null,
+  );
   const isComparedReady =
     stage === "compared" && slotA !== null && slotB !== null;
 
@@ -104,6 +113,11 @@ export function CompareTurnItem({
       slotB &&
       turn.confirmSelectedOptions.length === 0
     ) {
+      const currentPairKey = `${slotA.id}:${slotB.id}`;
+      if (initialPrefilledKeyRef.current === currentPairKey) {
+        return;
+      }
+      initialPrefilledKeyRef.current = null;
       onRevealConfirmChoices(turn.id);
     }
   }, [
@@ -229,7 +243,7 @@ export function CompareTurnItem({
 
   return (
     <div className="flex flex-col gap-16 w-full overflow-visible">
-      {/* Optional User Bubble (shown on Cold Start starter selection or dock-typed compare prompt) */}
+      {/* Optional User Bubble (shown on Cold Start starter selection, Compare Prompted Ad, or dock-typed compare prompt) */}
       {turn.showUserBubble && (
         <motion.div
           ref={(node) => {
@@ -237,13 +251,32 @@ export function CompareTurnItem({
               seenCompareBubbleTurnIds.add(turn.id);
             }
           }}
-          variants={upwardCraftedBubbleVariants}
-          initial={bubbleAlreadySeen ? false : "hidden"}
-          animate="visible"
-          exit="exit"
+          initial={
+            bubbleAlreadySeen
+              ? false
+              : {
+                  opacity: 0,
+                  scale: 0.92,
+                  filter: "blur(4px)",
+                  y: 28,
+                }
+          }
+          animate={{
+            opacity: 1,
+            scale: 1,
+            filter: "blur(0px)",
+            y: 0,
+            transition: {
+              duration: DURATION_ENTER,
+              delay: sheetOpenStagger ? 0.22 : 0,
+              ease: EASE_PREMIUM,
+            },
+          }}
+          exit={upwardCraftedBubbleVariants.exit as TargetAndTransition}
           className="self-end bg-surface text-ink px-10 py-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp max-w-210 shadow-bubble flex flex-row items-center gap-6"
         >
-          {turn.userPrompt === "Help me compare bags" && (
+          {(turn.showCompareIcon ||
+            turn.userPrompt === "Help me compare bags") && (
             <img
               src="/assets/figma/icon-compare-bubble.svg"
               alt=""
@@ -285,7 +318,11 @@ export function CompareTurnItem({
               y: 0,
               transition: {
                 duration: DURATION_ENTER,
-                delay: turn.showUserBubble ? 0.12 : 0,
+                delay: turn.showUserBubble
+                  ? sheetOpenStagger
+                    ? 0.34
+                    : 0.12
+                  : 0,
                 ease: EASE_PREMIUM,
               },
             }}
@@ -330,8 +367,9 @@ export function CompareTurnItem({
                 >
                   <span className="text-micro text-ink-inverse">Coach AI</span>
                   <Box className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble text-caption text-ink tracking-xs text-pretty">
-                    Select two bags below and I’ll compare their silhouette,
-                    size, carry options, and best occasions side by side.
+                    {turn.prefilledFromRecent && slotA && slotB
+                      ? "I pulled in the last two styles you viewed — compare their silhouette, size, carry options, and best occasions side by side, or edit your choices below."
+                      : "Select two bags below and I’ll compare their silhouette, size, carry options, and best occasions side by side."}
                   </Box>
                 </motion.div>
 

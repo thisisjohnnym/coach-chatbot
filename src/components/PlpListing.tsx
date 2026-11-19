@@ -1,9 +1,13 @@
 import type { RefObject } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import {
+  DEFAULT_RECENT_COMPARE_BAGS,
+  PLP_COMPARE_ROWS,
   PLP_ROWS,
   type BagProduct,
   type ContentSpotMode,
 } from "../data/catalog";
+import { contextualIconVariants } from "../motion/presets";
 import { Box, Cluster, Layer, LayerGrid, Stack } from "../primitives/Layout";
 import { ContentSpotAd } from "./ContentSpotAd";
 
@@ -19,6 +23,8 @@ export interface PlpListingProps {
   scrollRef: RefObject<HTMLDivElement | null>;
   contentSpotMode: ContentSpotMode;
   contentSpotDismissed: boolean;
+  bagCount?: number;
+  recentComparePair?: [BagProduct, BagProduct];
   onOpenAssistant: (mode: ContentSpotMode) => void;
   onDismissContentSpot: () => void;
   onSelectBagFromGrid?: (bag: BagProduct) => void;
@@ -26,10 +32,15 @@ export interface PlpListingProps {
 
 interface ProductTileProps {
   bag: BagProduct;
+  showViewedBadge?: boolean;
   onSelect?: (bag: BagProduct) => void;
 }
 
-function ProductTile({ bag, onSelect }: ProductTileProps) {
+function ProductTile({
+  bag,
+  showViewedBadge = false,
+  onSelect,
+}: ProductTileProps) {
   return (
     <Stack
       as="article"
@@ -42,6 +53,20 @@ function ProductTile({ bag, onSelect }: ProductTileProps) {
           alt={bag.name}
           className="stack-cell w-full h-257 object-cover"
         />
+        <AnimatePresence initial={false}>
+          {showViewedBadge && (
+            <motion.span
+              key="viewed-badge"
+              variants={contextualIconVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="stack-cell self-start justify-self-start m-8 px-8 py-3 rounded-pill bg-surface/90 backdrop-blur-subtle text-ink text-micro tracking-xs shadow-bubble pointer-events-none"
+            >
+              Viewed
+            </motion.span>
+          )}
+        </AnimatePresence>
         <button
           type="button"
           aria-label={`Quick add ${bag.name}`}
@@ -93,12 +118,19 @@ export function PlpListing({
   scrollRef,
   contentSpotMode,
   contentSpotDismissed,
+  bagCount = 0,
+  recentComparePair = DEFAULT_RECENT_COMPARE_BAGS,
   onOpenAssistant,
   onDismissContentSpot,
   onSelectBagFromGrid,
 }: PlpListingProps) {
-  const upperRows = PLP_ROWS.slice(0, 3);
-  const lowerRows = PLP_ROWS.slice(3);
+  const isCompareScenario = contentSpotMode === "compare";
+  const activeRows = isCompareScenario ? PLP_COMPARE_ROWS : PLP_ROWS;
+  const recentIds = isCompareScenario
+    ? new Set([recentComparePair[0].id, recentComparePair[1].id])
+    : null;
+  const upperRows = activeRows.slice(0, 4);
+  const lowerRows = activeRows.slice(4);
 
   return (
     <div
@@ -154,19 +186,36 @@ export function PlpListing({
         </Cluster>
 
         <Cluster className="gap-4 pb-4 pr-2">
-          <button
+          <LayerGrid
+            as="button"
             type="button"
-            aria-label="Shopping bag"
-            className="w-36 h-36 flex items-center justify-center press-scale"
+            aria-label={
+              bagCount > 0 ? `Shopping bag, ${bagCount} items` : "Shopping bag"
+            }
+            className="w-36 h-36 place-items-center press-scale motion-reduce:transition-none"
           >
             <img
               src="/assets/figma/icon-bag-white.svg"
               alt=""
               width={24}
               height={24}
-              className="w-24 h-24"
+              className="stack-cell w-24 h-24"
             />
-          </button>
+            <AnimatePresence initial={false}>
+              {bagCount > 0 && (
+                <motion.span
+                  key="bag-count-badge"
+                  variants={contextualIconVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="stack-cell self-start justify-self-end mt-2 mr-1 min-w-16 h-16 px-4 rounded-pill bg-surface text-ink text-micro font-medium tabular-nums flex items-center justify-center"
+                >
+                  {bagCount}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </LayerGrid>
           <button
             type="button"
             aria-label="Navigation menu"
@@ -196,17 +245,21 @@ export function PlpListing({
             height={16}
             className="w-16 h-16 shrink-0"
           />
-          <span className="text-caption text-ink-muted">Search</span>
+          <span className="text-caption text-ink font-medium">
+            {isCompareScenario ? "Tabby" : "shoulder bags"}
+          </span>
         </Cluster>
       </Box>
 
       {/* Page title & item count */}
-      <Box className="px-12 py-20 flex flex-row items-baseline justify-between text-ink-primary">
+      <Box className="px-12 py-20 flex flex-row items-baseline justify-between gap-12 text-ink-primary">
         <h1 className="text-title font-medium tracking-tight-title">
-          Handbags for Women
+          {isCompareScenario
+            ? "Showing results for “Tabby”"
+            : "Showing results for “shoulder bags”"}
         </h1>
-        <span className="text-micro tracking-items uppercase tabular-nums">
-          172 ITEMS
+        <span className="text-micro tracking-items uppercase tabular-nums shrink-0 whitespace-nowrap">
+          {isCompareScenario ? "24 ITEMS" : "172 ITEMS"}
         </span>
       </Box>
 
@@ -285,7 +338,7 @@ export function PlpListing({
         </button>
       </Cluster>
 
-      {/* Rows 0, 1, 2 (first 6 handbags) */}
+      {/* Rows 0–3 (first 8 handbags) */}
       <Stack className="w-full">
         {upperRows.map((row, rowIndex) => (
           <Box key={`upper-row-${rowIndex}`} className="flex flex-row gap-4 w-full">
@@ -293,6 +346,7 @@ export function PlpListing({
               <ProductTile
                 key={`upper-${rowIndex}-${bag.id}`}
                 bag={bag}
+                showViewedBadge={Boolean(recentIds?.has(bag.id))}
                 onSelect={onSelectBagFromGrid}
               />
             ))}
@@ -300,15 +354,16 @@ export function PlpListing({
         ))}
       </Stack>
 
-      {/* Inline AI Content Spot banner between Row 2 and Row 3 */}
+      {/* Inline AI Content Spot banner after 8 products */}
       <ContentSpotAd
         mode={contentSpotMode}
         dismissed={contentSpotDismissed}
+        recentComparePair={recentComparePair}
         onOpenAssistant={onOpenAssistant}
         onDismiss={onDismissContentSpot}
       />
 
-      {/* Row 3 below Content Spot */}
+      {/* Rows 4–6 below Content Spot */}
       <Stack className="w-full">
         {lowerRows.map((row, rowIndex) => (
           <Box key={`lower-row-${rowIndex}`} className="flex flex-row gap-4 w-full">
@@ -316,6 +371,7 @@ export function PlpListing({
               <ProductTile
                 key={`lower-${rowIndex}-${bag.id}`}
                 bag={bag}
+                showViewedBadge={Boolean(recentIds?.has(bag.id))}
                 onSelect={onSelectBagFromGrid}
               />
             ))}

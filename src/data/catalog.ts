@@ -125,13 +125,49 @@ export const BAG_CATALOG: BagProduct[] = [
         "The Brooklyn 28 is an effortlessly draped natural grain leather hobo with generous room and clean lines.",
     },
   },
+  {
+    id: "tabby-chain-19",
+    name: "Tabby Chain Crossbody 19",
+    shortName: "Tabby Chain Crossbody 19",
+    price: 295,
+    priceFormatted: "$295",
+    image: "/assets/figma/bag-soft-tabby-20.png",
+    category: "recent",
+    specs: {
+      style: "Compact chain crossbody",
+      size: "Mini / Small",
+      carry: "Chain + Crossbody",
+      bestFor: "Evenings / Hands-free",
+      color: "Black / Brass",
+      summaryNote:
+        "The Tabby Chain Crossbody 19 distills our structured Signature C hardware into a compact leather silhouette with a gleaming detachable chain.",
+    },
+  },
+];
+
+export const DEFAULT_RECENT_COMPARE_BAGS: [BagProduct, BagProduct] = [
+  BAG_CATALOG[0], // Tabby Shoulder Bag 26 ($475)
+  BAG_CATALOG[6], // Tabby Chain Crossbody 19 ($295)
 ];
 
 export const PLP_ROWS: [BagProduct, BagProduct][] = [
   [BAG_CATALOG[0], BAG_CATALOG[1]],
   [BAG_CATALOG[2], BAG_CATALOG[3]],
   [BAG_CATALOG[4], BAG_CATALOG[5]],
+  [BAG_CATALOG[1], BAG_CATALOG[2]],
+  [BAG_CATALOG[5], BAG_CATALOG[0]],
+  [BAG_CATALOG[3], BAG_CATALOG[4]],
+  [BAG_CATALOG[2], BAG_CATALOG[1]],
+];
+
+export const PLP_COMPARE_ROWS: [BagProduct, BagProduct][] = [
+  [BAG_CATALOG[0], BAG_CATALOG[6]],
+  [BAG_CATALOG[1], BAG_CATALOG[2]],
   [BAG_CATALOG[4], BAG_CATALOG[5]],
+  [BAG_CATALOG[3], BAG_CATALOG[1]],
+  [BAG_CATALOG[2], BAG_CATALOG[4]],
+  [BAG_CATALOG[5], BAG_CATALOG[3]],
+  [BAG_CATALOG[1], BAG_CATALOG[4]],
 ];
 
 export const STATEMENT_CAROUSEL_BAGS: BagProduct[] = [
@@ -140,7 +176,24 @@ export const STATEMENT_CAROUSEL_BAGS: BagProduct[] = [
   BAG_CATALOG[4], // Chelsea Shoulder Bag 30 ($325)
 ];
 
-export type ContentSpotMode = "general" | "prompted";
+export type ContentSpotMode = "general" | "prompted" | "compare";
+
+export function getCompareSpotCopy(recentPair: [BagProduct, BagProduct]): {
+  userPrompt: string;
+  assistantPreview: string;
+} {
+  const [bagA, bagB] = recentPair;
+  const bothTabby =
+    bagA.name.toLowerCase().includes("tabby") &&
+    bagB.name.toLowerCase().includes("tabby");
+
+  return {
+    userPrompt: bothTabby
+      ? "Compare Tabby bags"
+      : `Compare ${bagA.shortName} and ${bagB.shortName}`,
+    assistantPreview: `Pulling up ${bagA.shortName} and ${bagB.shortName} to compare side by side`,
+  };
+}
 
 export interface StarterAction {
   id: "narrow" | "outfit" | "compare" | "gift";
@@ -179,11 +232,34 @@ export const COLD_START_ACTIONS: StarterAction[] = [
 export interface CannedReply {
   leadParagraphs: string[];
   bags?: BagProduct[];
+  featuredBag?: BagProduct;
   followUpNote?: string;
   options?: string[];
 }
 
 export const STATEMENT_PROMPT = "Show me something that makes a statement";
+
+export const OUTFIT_STARTER_PROMPT = "Match a bag to my outfit";
+
+export const OUTFIT_SELFIE_PREVIEW = {
+  image: "/assets/figma/ad-model.png",
+  title: "Your look",
+  subtitle: "Cream & navy knit · Gold accents",
+} as const;
+
+export const OUTFIT_MATCH_REPLY: CannedReply = {
+  leadParagraphs: [
+    "Love the cream and navy knit with warm gold jewelry. Rich maple, dark cherry, and sculpted brass hardware will ground the pattern without competing with it.",
+  ],
+  bags: [BAG_CATALOG[1], BAG_CATALOG[4], BAG_CATALOG[0]],
+  followUpNote:
+    "Soft Tabby 20 in Maple echoes your warm gold accents for daytime, while Chelsea 30 in Dark Cherry adds moody contrast against denim.",
+  options: [
+    "Compare Soft Tabby 20 and Chelsea 30",
+    "Which is best for going out?",
+    "More with gold hardware",
+  ],
+};
 
 export function findMentionedBagsInPrompt(prompt: string): BagProduct[] {
   const lower = prompt.toLowerCase();
@@ -208,6 +284,8 @@ export function findMentionedBagsInPrompt(prompt: string): BagProduct[] {
 
   if (hits.length < 2) {
     const keywordAliases: Array<{ bag: BagProduct; keyword: string }> = [
+      { bag: BAG_CATALOG[6], keyword: "chain crossbody" },
+      { bag: BAG_CATALOG[6], keyword: "tabby 19" },
       { bag: BAG_CATALOG[1], keyword: "soft tabby" },
       { bag: BAG_CATALOG[3], keyword: "ergo" },
       { bag: BAG_CATALOG[2], keyword: "juliet" },
@@ -232,7 +310,7 @@ export function findMentionedBagsInPrompt(prompt: string): BagProduct[] {
 export function getCannedReplyForPrompt(prompt: string): CannedReply {
   const lower = prompt.toLowerCase();
 
-  if (lower.startsWith("tell me more about")) {
+  if (lower.startsWith("tell me more about") || lower.startsWith("tell me about ")) {
     const mentioned = findMentionedBagsInPrompt(prompt);
     const bag = mentioned[0];
     if (bag) {
@@ -243,10 +321,8 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
           bag.specs.summaryNote,
           `Styled as a ${bag.specs.style.toLowerCase()} in ${bag.specs.color} (${bag.priceFormatted}), it offers ${bag.specs.carry.toLowerCase()} versatility suited for ${bag.specs.bestFor.toLowerCase()}.`,
         ],
-        bags: [
-          bag,
-          ...BAG_CATALOG.filter((candidate) => candidate.id !== bag.id).slice(0, 2),
-        ],
+        featuredBag: bag,
+        followUpNote: `Would you like to add the ${bag.shortName} to your bag or view full product details?`,
         options: [
           `Compare ${bag.shortName} and ${companion.shortName}`,
           "Which is best for going out?",

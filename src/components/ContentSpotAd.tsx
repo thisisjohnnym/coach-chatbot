@@ -1,12 +1,18 @@
 import clsx from "clsx";
 import { AnimatePresence, motion } from "motion/react";
-import type { ContentSpotMode } from "../data/catalog";
+import {
+  DEFAULT_RECENT_COMPARE_BAGS,
+  getCompareSpotCopy,
+  type BagProduct,
+  type ContentSpotMode,
+} from "../data/catalog";
 import { blurScaleVariants } from "../motion/presets";
 import { Box, Cluster, Layer, LayerGrid, Stack } from "../primitives/Layout";
 
 export interface ContentSpotAdProps {
   mode: ContentSpotMode;
   dismissed: boolean;
+  recentComparePair?: [BagProduct, BagProduct];
   onOpenAssistant: (mode: ContentSpotMode) => void;
   onDismiss: () => void;
 }
@@ -14,18 +20,30 @@ export interface ContentSpotAdProps {
 export function ContentSpotAd({
   mode,
   dismissed,
+  recentComparePair = DEFAULT_RECENT_COMPARE_BAGS,
   onOpenAssistant,
   onDismiss,
 }: ContentSpotAdProps) {
+  const compareCopy = getCompareSpotCopy(recentComparePair);
+
   const userMessage =
     mode === "general"
       ? "Help me find something that matches..."
-      : "Show me something that makes a statement";
+      : mode === "compare"
+        ? compareCopy.userPrompt
+        : "Show me something that makes a statement";
 
   const assistantMessage =
     mode === "general"
       ? "Searching for..."
-      : "Searching through the results to find something that makes a statement";
+      : mode === "compare"
+        ? compareCopy.assistantPreview
+        : "Finding statement making shoulder bags...";
+
+  const bubbleMotionKey =
+    mode === "compare"
+      ? `compare-${recentComparePair[0].id}-${recentComparePair[1].id}`
+      : mode;
 
   return (
     <Box
@@ -93,15 +111,33 @@ export function ContentSpotAd({
           <Layer className="pointer-events-none w-full h-460 flex flex-col items-stretch z-20">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
-                key={mode}
+                key={bubbleMotionKey}
                 variants={blurScaleVariants}
                 initial="hidden"
                 animate="visible"
                 exit="exit"
                 className="w-full h-460 flex flex-col items-stretch"
               >
-                <Box className="self-end mr-29 mt-157 bg-surface p-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp shadow-bubble w-181">
-                  <p className="text-caption text-ink">{userMessage}</p>
+                <Box
+                  className={clsx(
+                    "self-end mr-29 mt-157 bg-surface p-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp shadow-bubble",
+                    mode === "compare"
+                      ? "max-w-196 flex flex-row items-center gap-6"
+                      : "w-181",
+                  )}
+                >
+                  {mode === "compare" && (
+                    <img
+                      src="/assets/figma/icon-compare-bubble.svg"
+                      alt=""
+                      width={14}
+                      height={14}
+                      className="w-14 h-14 shrink-0"
+                    />
+                  )}
+                  <p className="text-caption text-ink text-balance m-0">
+                    {userMessage}
+                  </p>
                 </Box>
 
                 <Stack

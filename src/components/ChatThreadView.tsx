@@ -10,6 +10,7 @@ import {
   DURATION_ENTER,
   EASE_PREMIUM,
   blurScaleVariants,
+  contextualIconVariants,
   scrollCueAnnounceVariants,
   staggerAnswerSequenceVariants,
   staggerCardsVariants,
@@ -24,6 +25,15 @@ import {
   type CompareStage,
   type CompareThreadTurn,
 } from "./CompareFlowView";
+import {
+  OutfitTurnItem,
+  resetSeenOutfitTurnIds,
+  seenOutfitAwaitingTurnIds,
+  seenOutfitBubbleTurnIds,
+  seenOutfitMatchedTurnIds,
+  type OutfitStage,
+  type OutfitThreadTurn,
+} from "./OutfitFlowView";
 import { ProgressiveBlurEdge } from "./ProgressiveBlurEdge";
 
 export type ChatTurnStatus =
@@ -43,15 +53,22 @@ export interface ChatMessageTurn {
   anchorChoiceGroupKey?: string;
 }
 
-export type ThreadTurn = ChatMessageTurn | CompareThreadTurn;
+export type ThreadTurn =
+  | ChatMessageTurn
+  | CompareThreadTurn
+  | OutfitThreadTurn;
 
 export interface ChatThreadViewProps {
   turns: ThreadTurn[];
   steadyStage?: boolean;
   sheetOpenStagger?: boolean;
+  bagIdsInCart?: string[];
   onSelectOption: (turnId: string, option: string) => void;
   onFeedback: (turnId: string, vote: "up" | "down") => void;
   onInspectBag?: (bag: BagProduct) => void;
+  onToggleBagItem?: (bag: BagProduct) => void;
+  onViewBagDetails?: (bag: BagProduct) => void;
+  onPickSelfie: (turnId: string) => void;
   onOpenComparePicker: (turnId: string, slot: "A" | "B") => void;
   onEditCompareChoices: (turnId: string) => void;
   onConfirmCompare: (turnId: string) => void;
@@ -68,6 +85,7 @@ export function resetSeenChatTurnIds() {
   seenPromptTurnIds.clear();
   seenAnsweredTurnIds.clear();
   resetSeenCompareTurnIds();
+  resetSeenOutfitTurnIds();
   savedThreadScrollTop = 0;
 }
 
@@ -92,9 +110,13 @@ export function ChatThreadView({
   turns,
   steadyStage = false,
   sheetOpenStagger = false,
+  bagIdsInCart = [],
   onSelectOption,
   onFeedback,
   onInspectBag,
+  onToggleBagItem,
+  onViewBagDetails,
+  onPickSelfie,
   onOpenComparePicker,
   onEditCompareChoices,
   onConfirmCompare,
@@ -108,6 +130,7 @@ export function ChatThreadView({
   const choiceGroupRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const prevTurnSignatureRef = useRef<string>("");
   const prevCompareStagesRef = useRef<Map<string, CompareStage>>(new Map());
+  const prevOutfitStagesRef = useRef<Map<string, OutfitStage>>(new Map());
   const scrollRafRef = useRef<number | null>(null);
 
   const [scrolledTop, setScrolledTop] = useState(0);
@@ -119,6 +142,9 @@ export function ChatThreadView({
     Boolean(firstTurn) &&
     ((firstTurn.kind === "chat" && firstTurn.status !== "answered") ||
       (firstTurn.kind === "compare" &&
+        (firstTurn.stage === "loading" ||
+          firstTurn.stage === "exiting-loading")) ||
+      (firstTurn.kind === "outfit" &&
         (firstTurn.stage === "loading" ||
           firstTurn.stage === "exiting-loading")));
 
@@ -183,6 +209,9 @@ export function ChatThreadView({
       seenCompareBubbleTurnIds,
       seenCompareSelectingTurnIds,
       seenCompareResultsTurnIds,
+      seenOutfitBubbleTurnIds,
+      seenOutfitAwaitingTurnIds,
+      seenOutfitMatchedTurnIds,
     ]) {
       for (const id of setRef) {
         if (!activeIds.has(id)) {
@@ -196,6 +225,8 @@ export function ChatThreadView({
         seenPromptTurnIds.add(turn.id);
       } else if (turn.kind === "compare" && turn.showUserBubble) {
         seenCompareBubbleTurnIds.add(turn.id);
+      } else if (turn.kind === "outfit" && turn.showUserBubble) {
+        seenOutfitBubbleTurnIds.add(turn.id);
       }
     }
   }, [turns]);
@@ -293,6 +324,44 @@ export function ChatThreadView({
     };
   }, [turns]);
 
+  // Scroll smoothly when an Outfit turn simulates picking a selfie and reveals matched bags below
+  useEffect(() => {
+    const scrollEl = scrollRef.current;
+    let newlyMatchedTurnId: string | null = null;
+
+    for (const turn of turns) {
+      if (turn.kind !== "outfit") continue;
+      const prevStage = prevOutfitStagesRef.current.get(turn.id);
+      if (prevStage === "awaiting-selfie" && turn.stage === "matched") {
+        newlyMatchedTurnId = turn.id;
+      }
+      prevOutfitStagesRef.current.set(turn.id, turn.stage);
+    }
+
+    if (!newlyMatchedTurnId || !scrollEl) return;
+
+    const rafId = window.requestAnimationFrame(() => {
+      const resultsEl = choiceGroupRefs.current.get(
+        `${newlyMatchedTurnId}:results`,
+      );
+      if (!resultsEl) return;
+
+      const targetTop =
+        scrollEl.scrollTop +
+        (resultsEl.getBoundingClientRect().top -
+          scrollEl.getBoundingClientRect().top) -
+        124;
+      scrollEl.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: "smooth",
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [turns]);
+
   const scrollTurnIntoView = useCallback((turn: ThreadTurn) => {
     const scrollEl = scrollRef.current;
     if (!scrollEl) return;
@@ -306,13 +375,13 @@ export function ChatThreadView({
     if (!anchorEl) return;
 
     window.requestAnimationFrame(() => {
-      const targetTop =
+      const rawTop =
         scrollEl.scrollTop +
         (anchorEl.getBoundingClientRect().top -
-          scrollEl.getBoundingClientRect().top) -
-        8;
+          scrollEl.getBoundingClientRect().top);
+      const topInset = rawTop > 16 ? 24 : 8;
       scrollEl.scrollTo({
-        top: Math.max(0, targetTop),
+        top: Math.max(0, rawTop - topInset),
         behavior: "smooth",
       });
     });
@@ -388,6 +457,7 @@ export function ChatThreadView({
                 >
                   <CompareTurnItem
                     turn={turn}
+                    sheetOpenStagger={sheetOpenStagger && turnIdx === 0}
                     registerChoiceGroupRef={registerChoiceGroupRef}
                     onRevealConfirmChoices={handleRevealConfirmChoices}
                     onOpenPicker={onOpenComparePicker}
@@ -396,6 +466,31 @@ export function ChatThreadView({
                     onConfirmSomethingElse={onConfirmCompareSomethingElse}
                     onCompareFeatures={onCompareFeatures}
                     onFollowUpSomethingElse={onFollowUpCompareSomethingElse}
+                    onFeedback={onFeedback}
+                  />
+                </div>
+              );
+            }
+
+            if (turn.kind === "outfit") {
+              return (
+                <div
+                  key={turn.id}
+                  ref={(node) => {
+                    if (node) {
+                      turnElementsRef.current.set(turn.id, node);
+                    } else {
+                      turnElementsRef.current.delete(turn.id);
+                    }
+                  }}
+                  className="w-full"
+                >
+                  <OutfitTurnItem
+                    turn={turn}
+                    registerChoiceGroupRef={registerChoiceGroupRef}
+                    onPickSelfie={onPickSelfie}
+                    onInspectBag={onInspectBag}
+                    onSelectOption={onSelectOption}
                     onFeedback={onFeedback}
                   />
                 </div>
@@ -586,6 +681,105 @@ export function ChatThreadView({
                             <p className="m-0">{turn.reply.followUpNote}</p>
                           </Box>
                         )}
+
+                        {turn.reply.featuredBag && (() => {
+                          const featuredBag = turn.reply.featuredBag;
+                          const isFeaturedInBag = bagIdsInCart.includes(
+                            featuredBag.id,
+                          );
+
+                          return (
+                            <Box className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble flex flex-col gap-10">
+                              <button
+                                type="button"
+                                onClick={() => onViewBagDetails?.(featuredBag)}
+                                className="w-full flex flex-row items-center gap-10 text-left press-scale motion-reduce:transition-none"
+                              >
+                                <Box className="w-64 h-76 rounded-card bg-surface-muted overflow-hidden image-outline shrink-0">
+                                  <img
+                                    src={featuredBag.image}
+                                    alt={featuredBag.name}
+                                    className="w-64 h-76 object-cover"
+                                  />
+                                </Box>
+                                <Stack className="min-w-0 flex-1 gap-4">
+                                  <p className="text-caption font-medium text-ink line-clamp-2 text-pretty m-0">
+                                    {featuredBag.name}
+                                  </p>
+                                  <p className="text-micro text-ink-muted truncate m-0">
+                                    {featuredBag.specs.color} ·{" "}
+                                    {featuredBag.specs.size}
+                                  </p>
+                                  <p className="text-caption font-medium text-ink tabular-nums m-0">
+                                    {featuredBag.priceFormatted}
+                                  </p>
+                                </Stack>
+                              </button>
+
+                              <Box className="flex flex-row gap-8 w-full">
+                                <button
+                                  type="button"
+                                  aria-pressed={isFeaturedInBag}
+                                  aria-label={
+                                    isFeaturedInBag
+                                      ? `Remove ${featuredBag.shortName} from bag`
+                                      : `Add ${featuredBag.shortName} to bag`
+                                  }
+                                  onClick={() => onToggleBagItem?.(featuredBag)}
+                                  className={clsx(
+                                    "flex-1 min-w-0 h-40 px-10 rounded-pill flex flex-row items-center justify-center gap-5 text-caption font-medium tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                                    isFeaturedInBag
+                                      ? "bg-ink-charcoal text-ink-inverse"
+                                      : "bg-ink text-ink-inverse",
+                                  )}
+                                >
+                                  <LayerGrid className="w-15 h-15 place-items-center shrink-0">
+                                    <AnimatePresence mode="wait" initial={false}>
+                                      {isFeaturedInBag ? (
+                                        <motion.img
+                                          key="added-check"
+                                          variants={contextualIconVariants}
+                                          initial="hidden"
+                                          animate="visible"
+                                          exit="exit"
+                                          src="/assets/figma/icon-check-white.svg"
+                                          alt=""
+                                          width={15}
+                                          height={15}
+                                          className="stack-cell w-15 h-15"
+                                        />
+                                      ) : (
+                                        <motion.img
+                                          key="bag-icon"
+                                          variants={contextualIconVariants}
+                                          initial="hidden"
+                                          animate="visible"
+                                          exit="exit"
+                                          src="/assets/figma/icon-bag-white.svg"
+                                          alt=""
+                                          width={15}
+                                          height={15}
+                                          className="stack-cell w-15 h-15"
+                                        />
+                                      )}
+                                    </AnimatePresence>
+                                  </LayerGrid>
+                                  <span>
+                                    {isFeaturedInBag ? "Added" : "Add to bag"}
+                                  </span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => onViewBagDetails?.(featuredBag)}
+                                  className="flex-1 min-w-0 h-40 px-10 rounded-pill bg-surface text-ink border border-border-chip hover:bg-surface-muted flex flex-row items-center justify-center text-caption font-medium tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none"
+                                >
+                                  View details
+                                </button>
+                              </Box>
+                            </Box>
+                          );
+                        })()}
 
                         <Cluster className="gap-10 pt-2">
                           <span className="text-micro text-ink-inverse">

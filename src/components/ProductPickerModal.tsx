@@ -14,6 +14,7 @@ import { Box, Layer, LayerGrid, Stack } from "../primitives/Layout";
 export interface ProductPickerModalProps {
   slot: "A" | "B";
   excludeBagId?: string;
+  recentBags?: BagProduct[];
   onPickBag: (bag: BagProduct) => void;
   onClose: () => void;
 }
@@ -28,9 +29,30 @@ const FILTER_CHIPS: Array<{ id: FilterKey; label: string }> = [
   { id: "all", label: "All" },
 ];
 
-function getOrderedBags(filter: FilterKey): BagProduct[] {
+function getOrderedBags(
+  filter: FilterKey,
+  recentBags?: BagProduct[],
+): BagProduct[] {
   if (filter === "all") {
     return [...BAG_CATALOG, BAG_CATALOG[2], BAG_CATALOG[0], BAG_CATALOG[4]];
+  }
+
+  if (filter === "recent" && recentBags && recentBags.length > 0) {
+    const mostRecentFirst = [...recentBags].reverse();
+    const recentIds = new Set(mostRecentFirst.map((bag) => bag.id));
+    const restRecent = BAG_CATALOG.filter(
+      (bag) => bag.category === "recent" && !recentIds.has(bag.id),
+    );
+    const remaining = BAG_CATALOG.filter(
+      (bag) => bag.category !== "recent" && !recentIds.has(bag.id),
+    );
+    return [
+      ...mostRecentFirst,
+      ...restRecent,
+      ...remaining,
+      BAG_CATALOG[0],
+      BAG_CATALOG[4],
+    ];
   }
 
   const primary = BAG_CATALOG.filter((bag) => bag.category === filter);
@@ -47,6 +69,7 @@ function getOrderedBags(filter: FilterKey): BagProduct[] {
 export function ProductPickerModal({
   slot,
   excludeBagId,
+  recentBags,
   onPickBag,
   onClose,
 }: ProductPickerModalProps) {
@@ -101,8 +124,8 @@ export function ProductPickerModal({
   }, [onClose]);
 
   const displayedBags = useMemo(
-    () => getOrderedBags(activeFilter),
-    [activeFilter],
+    () => getOrderedBags(activeFilter, recentBags),
+    [activeFilter, recentBags],
   );
 
   const hasTopEdge = scrolledTop > 8;

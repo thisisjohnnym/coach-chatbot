@@ -23,7 +23,6 @@ export interface ClosedFloatingOverlayProps {
   contentSpotDismissed: boolean;
   onSelectSpotMode: (mode: ContentSpotMode) => void;
   onResumeChat: () => void;
-  onDismissResumePill: () => void;
   onScrollTop: () => void;
   onOpenFreshChat: () => void;
 }
@@ -47,7 +46,6 @@ export function ClosedFloatingOverlay({
   contentSpotDismissed,
   onSelectSpotMode,
   onResumeChat,
-  onDismissResumePill,
   onScrollTop,
   onOpenFreshChat,
 }: ClosedFloatingOverlayProps) {
@@ -128,50 +126,34 @@ export function ClosedFloatingOverlay({
                       />
 
                       <Layer
+                        as="button"
+                        type="button"
+                        onClick={onResumeChat}
                         className={clsx(
                           visible ? "pointer-events-auto" : "pointer-events-none",
-                          "z-10 self-center justify-self-center resume-ai-pill rounded-pill shadow-resume-pill",
+                          "z-10 self-center justify-self-center resume-ai-pill rounded-pill shadow-resume-pill press-scale motion-reduce:transition-none",
                         )}
                       >
-                        <Box className="bg-surface rounded-pill pr-5 flex flex-row items-center">
-                          <button
-                            type="button"
-                            onClick={onResumeChat}
-                            className="min-h-52 pl-14 pr-4 py-9 rounded-l-pill flex flex-row items-center gap-6 press-scale motion-reduce:transition-none text-left"
-                          >
-                            <motion.img
-                              variants={
-                                prefersReducedMotion
-                                  ? undefined
-                                  : resumeSparkleAnnounceVariants
-                              }
-                              src="/assets/figma/sparkle-black.svg"
-                              alt=""
-                              width={16}
-                              height={16}
-                              className="w-16 h-16 shrink-0"
-                            />
-                            <span className="text-caption text-ink tracking-xs pt-1 whitespace-nowrap">
-                              Resume your chat
-                              <br />
-                              with Coach AI
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={onDismissResumePill}
-                            className="w-36 h-36 rounded-pill flex items-center justify-center shrink-0 press-scale motion-reduce:transition-none"
-                          >
-                            <img
-                              src="/assets/figma/icon-close-pill.svg"
-                              alt="Dismiss resume chat"
-                              width={20}
-                              height={20}
-                              className="w-20 h-20"
-                            />
-                          </button>
-                        </Box>
+                        <Cluster
+                          as="span"
+                          className="h-37 pl-13 pr-15 bg-surface rounded-pill gap-6"
+                        >
+                          <motion.img
+                            variants={
+                              prefersReducedMotion
+                                ? undefined
+                                : resumeSparkleAnnounceVariants
+                            }
+                            src="/assets/figma/sparkle-black.svg"
+                            alt=""
+                            width={16}
+                            height={16}
+                            className="w-16 h-16 shrink-0"
+                          />
+                          <span className="text-caption text-ink tracking-xs pt-1 whitespace-nowrap">
+                            Coach AI
+                          </span>
+                        </Cluster>
                       </Layer>
                     </motion.div>
                   ) : null}
@@ -220,7 +202,7 @@ export function ClosedFloatingOverlay({
                 aria-label="Entry scenario selector"
                 className={clsx(
                   visible ? "pointer-events-auto" : "pointer-events-none",
-                  "bg-surface-selector backdrop-blur-md border border-border-dock rounded-pill p-4 gap-4 shadow-fab",
+                  "max-w-full overflow-x-auto no-scrollbar bg-surface-selector backdrop-blur-md border border-border-dock rounded-pill p-4 gap-4 shadow-fab",
                 )}
               >
                 <button
@@ -228,7 +210,7 @@ export function ClosedFloatingOverlay({
                   aria-pressed={contentSpotMode === "general" && !contentSpotDismissed}
                   onClick={() => onSelectSpotMode("general")}
                   className={clsx(
-                    "h-32 px-14 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                    "h-32 px-11 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
                     contentSpotMode === "general" && !contentSpotDismissed
                       ? "bg-surface text-ink font-medium"
                       : "text-ink-inverse-soft hover:text-ink-inverse",
@@ -242,13 +224,27 @@ export function ClosedFloatingOverlay({
                   aria-pressed={contentSpotMode === "prompted" && !contentSpotDismissed}
                   onClick={() => onSelectSpotMode("prompted")}
                   className={clsx(
-                    "h-32 px-14 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                    "h-32 px-11 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
                     contentSpotMode === "prompted" && !contentSpotDismissed
                       ? "bg-surface text-ink font-medium"
                       : "text-ink-inverse-soft hover:text-ink-inverse",
                   )}
                 >
                   Prompted Ad
+                </button>
+
+                <button
+                  type="button"
+                  aria-pressed={contentSpotMode === "compare" && !contentSpotDismissed}
+                  onClick={() => onSelectSpotMode("compare")}
+                  className={clsx(
+                    "h-32 px-11 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                    contentSpotMode === "compare" && !contentSpotDismissed
+                      ? "bg-surface text-ink font-medium"
+                      : "text-ink-inverse-soft hover:text-ink-inverse",
+                  )}
+                >
+                  Compare Prompt
                 </button>
               </Cluster>
             </Box>
