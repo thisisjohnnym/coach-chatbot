@@ -105,13 +105,14 @@
 
   /* Shadows */
   --shadow-fab: 0 6px 15px rgba(0, 0, 0, 0.16);
-  --shadow-resume-pill: 0 2px 5px rgba(0, 0, 0, 0.06);
+  --shadow-resume-pill: 0 1px 2px rgba(0, 0, 0, 0.06), 0 5px 12px rgba(0, 0, 0, 0.08);
   --shadow-scroll-cue: 0 15px 12px rgba(52, 39, 29, 0.65);
   --shadow-bubble: 0 4px 16px rgba(0, 0, 0, 0.08);
   --shadow-send-glow: 0 4px 14px rgba(217, 150, 113, 0.55);
 
   /* Motion curves & subtle optical blur token */
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-sheet-ios: cubic-bezier(0.32, 0.72, 0, 1);
   --blur-subtle: 2px;
 }
 
@@ -204,18 +205,21 @@
 }
 
 @utility resume-ai-glow {
+  margin: -14px -15px -18px;
+  padding: 18px;
+  background-clip: content-box;
   background-image: conic-gradient(
     from var(--resume-stroke-angle) at 50% 50%,
-    transparent 4%,
-    var(--color-stroke-ai-cyan) 24%,
+    transparent 6%,
+    var(--color-stroke-ai-cyan) 25%,
     var(--color-stroke-ai-gold) 50%,
-    var(--color-stroke-ai-magenta) 76%,
-    transparent 96%
+    var(--color-stroke-ai-magenta) 75%,
+    transparent 94%
   );
-  filter: blur(13px) saturate(1.6);
-  opacity: 0.76;
-  scale: 1.05 1.22;
-  translate: 0 5px;
+  -webkit-filter: blur(5.5px) saturate(0.85) brightness(0.88);
+  filter: blur(5.5px) saturate(0.85) brightness(0.88);
+  opacity: 0.34;
+  translate: 0 3.5px;
   animation: resume-stroke-glide 4.6s linear infinite;
 }
 
@@ -428,8 +432,10 @@
 }
 
 @utility mobile-viewport-lock {
+  position: fixed;
+  inset: 0;
   width: 100%;
-  height: 100dvh;
+  height: 100%;
   margin-inline: auto;
   @media (min-width: 481px) {
     max-width: 430px;
@@ -440,23 +446,25 @@
   padding-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
 }
 
-@utility pb-safe-dock {
-  padding-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
+/* Continuous dock skirt: extends sheet + dock background seamlessly behind iOS 26 floating URL pill & keyboard */
+@utility pb-dock-resting {
+  padding-bottom: max(
+    16px,
+    calc(env(safe-area-inset-bottom, 0px) + 8px),
+    calc(var(--keyboard-inset, 0px) + 16px)
+  );
 }
 
-@utility pb-safe-dock-focused {
-  padding-bottom: max(18px, calc(env(safe-area-inset-bottom, 0px) + 10px));
+@utility pb-dock-focused {
+  padding-bottom: max(
+    18px,
+    calc(env(safe-area-inset-bottom, 0px) + 10px),
+    calc(var(--keyboard-inset, 0px) + 18px)
+  );
 }
 
-@utility pb-keyboard-dock {
-  padding-bottom: 18px;
-}
-
-@utility pb-keyboard-inset {
-  padding-bottom: var(--keyboard-inset, 0px);
-  transition-property: padding-bottom;
-  transition-duration: 280ms;
-  transition-timing-function: var(--ease-premium);
+@utility clip-stage-bottom {
+  clip-path: inset(-48px -24px 0px -24px);
 }
 
 @utility h-stage-content {
@@ -464,9 +472,9 @@
 }
 
 @utility transition-dock-focus {
-  transition-property: padding, gap, background-color, border-color;
-  transition-duration: 320ms;
-  transition-timing-function: var(--ease-premium);
+  transition-property: padding-top, padding-bottom, padding-inline, gap, background-color, border-color;
+  transition-duration: 460ms;
+  transition-timing-function: var(--ease-sheet-ios);
 }
 
 @utility ios-safe-prompt-field {
@@ -497,7 +505,7 @@
   html,
   body,
   #root {
-    height: 100%;
+    height: 100dvh;
     overflow: hidden;
   }
 

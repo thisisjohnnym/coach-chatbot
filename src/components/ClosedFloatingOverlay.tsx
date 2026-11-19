@@ -119,18 +119,20 @@ export function ClosedFloatingOverlay({
                           : "exit"
                       }
                       transition={prefersReducedMotion ? { duration: 0 } : undefined}
-                      className={clsx(
-                        visible ? "pointer-events-auto" : "pointer-events-none",
-                        "stack-grid place-items-center isolate will-change-transform",
-                      )}
+                      className="stack-grid isolate pointer-events-none"
                     >
-                      {/* Colored cast light synchronized 1:1 with the animated Figma stroke */}
+                      {/* Subtle directional stroke caustic cast into the pill's shadow footprint */}
                       <Layer
                         aria-hidden="true"
-                        className="z-0 w-full h-full rounded-pill resume-ai-glow pointer-events-none"
+                        className="z-0 rounded-pill resume-ai-glow pointer-events-none"
                       />
 
-                      <Layer className="z-10 resume-ai-pill rounded-pill shadow-resume-pill">
+                      <Layer
+                        className={clsx(
+                          visible ? "pointer-events-auto" : "pointer-events-none",
+                          "z-10 self-center justify-self-center resume-ai-pill rounded-pill shadow-resume-pill",
+                        )}
+                      >
                         <Box className="bg-surface rounded-pill pr-5 flex flex-row items-center">
                           <button
                             type="button"

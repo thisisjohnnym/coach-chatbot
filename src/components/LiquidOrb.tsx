@@ -14,6 +14,7 @@ export interface LiquidOrbProps {
   stageState: OrbStageState;
   bloomKey: number;
   staggerEntrance?: boolean;
+  hiddenForTyping?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export function LiquidOrb({
   stageState,
   bloomKey,
   staggerEntrance = false,
+  hiddenForTyping = false,
 }: LiquidOrbProps) {
   const prefersReducedMotion = useReducedMotion();
 
@@ -89,6 +91,24 @@ export function LiquidOrb({
       aria-hidden="true"
       className="w-full py-6 flex items-center justify-center pointer-events-none overflow-visible"
     >
+      <motion.div
+        initial={false}
+        animate={
+          prefersReducedMotion
+            ? { opacity: hiddenForTyping ? 0 : 1 }
+            : hiddenForTyping
+              ? { opacity: 0, scale: 0.93, y: -10 }
+              : { opacity: 1, scale: 1, y: 0 }
+        }
+        transition={
+          prefersReducedMotion
+            ? { duration: 0 }
+            : hiddenForTyping
+              ? { duration: 0.19, delay: 0.05, ease: EASE_PREMIUM }
+              : { duration: 0.34, delay: 0.14, ease: EASE_PREMIUM }
+        }
+        className="overflow-visible will-change-transform"
+      >
       <motion.div
         initial={
           prefersReducedMotion || !staggerEntrance
@@ -193,6 +213,7 @@ export function LiquidOrb({
             </LayerGrid>
           </LayerGrid>
         </LayerGrid>
+      </motion.div>
       </motion.div>
     </div>
   );

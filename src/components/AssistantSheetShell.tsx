@@ -11,6 +11,7 @@ import {
   TRANSITION_SHEET_OPEN,
   TRANSITION_TYPING_ENTER,
   TRANSITION_TYPING_EXIT,
+  TRANSITION_TYPING_SUBMIT_EXPAND,
   TYPING_STAGE_SETTLE_MS,
   blurScaleVariants,
 } from "../motion/presets";
@@ -20,16 +21,27 @@ import { ChatInputDock } from "./ChatInputDock";
 const newChatCtaVariants = {
   hidden: blurScaleVariants.hidden,
   visible: blurScaleVariants.visible,
-  exit: (exitingForTyping: boolean) => ({
-    opacity: 0,
-    scale: 0.95,
-    filter: "blur(3px)",
-    y: exitingForTyping ? 0 : -8,
-    transition: {
-      duration: exitingForTyping ? 0.22 : DURATION_EXIT,
-      ease: EASE_PREMIUM,
-    },
-  }),
+  exit: (exitingForTyping: boolean) =>
+    exitingForTyping
+      ? {
+          opacity: 0,
+          scale: 0.94,
+          y: -4,
+          transition: {
+            duration: 0.18,
+            ease: EASE_PREMIUM,
+          },
+        }
+      : {
+          opacity: 0,
+          scale: 0.95,
+          filter: "blur(3px)",
+          y: -8,
+          transition: {
+            duration: DURATION_EXIT,
+            ease: EASE_PREMIUM,
+          },
+        },
 };
 
 export interface AssistantSheetShellProps {
@@ -37,7 +49,6 @@ export interface AssistantSheetShellProps {
   stageHeight: number;
   isTypingFocused?: boolean;
   isExpandingFromSubmit?: boolean;
-  keyboardOpen?: boolean;
   staggerChrome?: boolean;
   showNewChat: boolean;
   onNewChat: () => void;
@@ -58,7 +69,6 @@ export function AssistantSheetShell({
   stageHeight,
   isTypingFocused = false,
   isExpandingFromSubmit = false,
-  keyboardOpen = false,
   staggerChrome = true,
   showNewChat,
   onNewChat,
@@ -82,7 +92,7 @@ export function AssistantSheetShell({
       return;
     }
 
-    if (prefersReducedMotion || isExpandingFromSubmit) {
+    if (prefersReducedMotion) {
       setIsStageSettling(false);
       return;
     }
@@ -96,14 +106,14 @@ export function AssistantSheetShell({
     };
   }, [isExpandingFromSubmit, isTypingFocused, prefersReducedMotion]);
 
-  const shouldClipStage = isTypingFocused || isStageSettling;
+  const shouldClipStage = isTypingFocused || isStageSettling || isExpandingFromSubmit;
 
   const stageHeightTransition = prefersReducedMotion
     ? { duration: 0 }
     : isTypingFocused
       ? TRANSITION_TYPING_ENTER
       : isExpandingFromSubmit
-        ? TRANSITION_SHEET_HEIGHT
+        ? TRANSITION_TYPING_SUBMIT_EXPAND
         : isStageSettling
           ? TRANSITION_TYPING_EXIT
           : TRANSITION_SHEET_HEIGHT;
@@ -119,7 +129,7 @@ export function AssistantSheetShell({
   return (
     <AnimatePresence initial={false}>
       {open && (
-        <LayerGrid key="assistant-sheet-shell" className="stack-cell w-full h-full overflow-hidden isolate">
+        <LayerGrid key="assistant-sheet-shell" className="stack-cell w-full h-full grid-rows-1 overflow-hidden isolate">
           {/* Softly dimming backdrop scrim (800ms enter, 640ms exit) */}
           <motion.div
             initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
@@ -158,7 +168,7 @@ export function AssistantSheetShell({
                   }
             }
             transition={prefersReducedMotion ? { duration: 0 } : TRANSITION_SHEET_OPEN}
-            className="stack-cell self-end w-full max-h-full pb-keyboard-inset motion-reduce:transition-none isolate z-10 will-change-transform"
+            className="stack-cell self-end w-full isolate z-10 will-change-transform"
           >
             <LayerGrid className="w-full rounded-t-sheet overflow-hidden bg-surface-sheet isolate">
               {/* Textured champagne-taupe background */}
@@ -282,42 +292,21 @@ export function AssistantSheetShell({
                   </Cluster>
                 </motion.header>
 
-                {/* Stage container clips cleanly while collapsing into Focused Typing View, and stays overflow-visible at rest so Orb glow breathes */}
+                {/* Stage container clips cleanly at dock edge while collapsing/expanding for Focused Typing View, keeping top Orb glow unclipped */}
                 <motion.div
                   initial={{ height: stageHeight }}
                   animate={{ height: stageHeight }}
                   transition={stageHeightTransition}
                   inert={isTypingFocused || undefined}
                   className={clsx(
-                    "w-full z-10",
-                    shouldClipStage ? "overflow-hidden pointer-events-none" : "overflow-visible",
+                    "w-full z-10 overflow-visible",
+                    shouldClipStage && "clip-stage-bottom",
+                    isTypingFocused && "pointer-events-none",
                   )}
                 >
-                  <motion.div
-                    initial={false}
-                    animate={
-                      prefersReducedMotion
-                        ? { opacity: isTypingFocused ? 0 : 1 }
-                        : {
-                            opacity: isTypingFocused ? 0 : 1,
-                            filter: isTypingFocused ? "blur(4px)" : "blur(0px)",
-                            y: isTypingFocused ? 8 : 0,
-                          }
-                    }
-                    transition={
-                      prefersReducedMotion
-                        ? { duration: 0 }
-                        : isTypingFocused
-                          ? { duration: 0.22, ease: EASE_PREMIUM }
-                          : TRANSITION_TYPING_EXIT
-                    }
-                    className={clsx(
-                      "w-full h-stage-content min-h-0",
-                      shouldClipStage ? "overflow-hidden" : "overflow-visible",
-                    )}
-                  >
+                  <div className="w-full h-stage-content min-h-0 overflow-visible">
                     {children}
-                  </motion.div>
+                  </div>
                 </motion.div>
 
                 {/* Persistent Input Dock (z-20) */}
@@ -351,7 +340,6 @@ export function AssistantSheetShell({
                     onSubmit={onSubmitPrompt}
                     onVoiceSample={onVoiceSample}
                     focused={isTypingFocused}
-                    keyboardOpen={keyboardOpen}
                     onFocusChange={onTypingFocusChange}
                   />
                 </motion.div>

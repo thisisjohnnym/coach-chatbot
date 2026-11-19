@@ -14,7 +14,6 @@ export interface ChatInputDockProps {
   onSubmit: (prompt: string) => void;
   onVoiceSample?: () => void;
   focused?: boolean;
-  keyboardOpen?: boolean;
   onFocusChange?: (focused: boolean) => void;
   inputRef?: RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
@@ -26,7 +25,6 @@ export function ChatInputDock({
   onSubmit,
   onVoiceSample,
   focused = false,
-  keyboardOpen = false,
   onFocusChange,
   inputRef,
   disabled = false,
@@ -85,11 +83,8 @@ export function ChatInputDock({
       className={clsx(
         "w-full bg-surface-dock border-t border-x border-border-dock rounded-t-dock backdrop-blur-md transition-dock-focus motion-reduce:transition-none cursor-text",
         focused
-          ? clsx(
-              "px-20 pt-20 gap-28",
-              keyboardOpen ? "pb-keyboard-dock" : "pb-safe-dock-focused",
-            )
-          : "px-16 pt-18 pb-safe-dock gap-16",
+          ? "px-20 pt-20 pb-dock-focused gap-28"
+          : "px-16 pt-18 pb-dock-resting gap-16",
       )}
     >
       <Box

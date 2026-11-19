@@ -11,14 +11,20 @@ export const EASE_PREMIUM: [number, number, number, number] = [0.22, 1, 0.36, 1]
  */
 export const EASE_SHEET: [number, number, number, number] = [0.19, 1, 0.22, 1];
 
+/**
+ * Native iOS sheet & keyboard curve: gentle departure so element fade-out leads,
+ * followed by a smooth synchronized settle with the mobile keyboard and URL bar.
+ */
+export const EASE_SHEET_IOS: [number, number, number, number] = [0.32, 0.72, 0, 1];
+
 export const DURATION_ENTER = 0.8;
 export const DURATION_EXIT = 0.56;
 export const EXIT_SETTLE_MS = 580;
 export const COLD_START_EXIT_DURATION = 0.56;
 export const COLD_START_SETTLE_MS = 580;
 export const RESUME_PILL_DELAY_MS = 260;
-export const FOCUSED_TYPING_STAGE_HEIGHT = 14;
-export const TYPING_STAGE_SETTLE_MS = 460;
+export const FOCUSED_TYPING_STAGE_HEIGHT = 12;
+export const TYPING_STAGE_SETTLE_MS = 600;
 
 export const TRANSITION_ENTER: Transition = {
   duration: DURATION_ENTER,
@@ -51,13 +57,21 @@ export const TRANSITION_SHEET_HEIGHT: Transition = {
 };
 
 export const TRANSITION_TYPING_ENTER: Transition = {
-  duration: 0.34,
-  ease: EASE_PREMIUM,
+  duration: 0.46,
+  delay: 0.06,
+  ease: EASE_SHEET_IOS,
 };
 
 export const TRANSITION_TYPING_EXIT: Transition = {
-  duration: 0.44,
-  ease: EASE_PREMIUM,
+  duration: 0.46,
+  delay: 0.03,
+  ease: EASE_SHEET_IOS,
+};
+
+export const TRANSITION_TYPING_SUBMIT_EXPAND: Transition = {
+  duration: 0.52,
+  delay: 0.04,
+  ease: EASE_SHEET_IOS,
 };
 
 export const TRANSITION_ORB_GLIDE: Transition = {
@@ -117,6 +131,9 @@ export const blurScaleVariants: Variants = {
     filter: "blur(0px)",
     y: 0,
     transition: TRANSITION_ENTER,
+    transitionEnd: {
+      filter: "none",
+    },
   },
   exit: {
     opacity: 0,
@@ -234,6 +251,9 @@ export const resumePillAnnounceVariants: Variants = {
     transition: {
       duration: 0.72,
       ease: EASE_PREMIUM,
+    },
+    transitionEnd: {
+      filter: "none",
     },
   },
   exit: {

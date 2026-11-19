@@ -9,7 +9,7 @@ import {
   type ContentSpotMode,
   type StarterAction,
 } from "./data/catalog";
-import { Layer, LayerGrid } from "./primitives/Layout";
+import { Box, Layer, LayerGrid } from "./primitives/Layout";
 import {
   COLD_START_EXIT_DURATION,
   COLD_START_SETTLE_MS,
@@ -19,6 +19,7 @@ import {
   EXIT_SETTLE_MS,
   FOCUSED_TYPING_STAGE_HEIGHT,
   RESUME_PILL_DELAY_MS,
+  TYPING_STAGE_SETTLE_MS,
 } from "./motion/presets";
 import { PlpListing } from "./components/PlpListing";
 import { ClosedFloatingOverlay } from "./components/ClosedFloatingOverlay";
@@ -48,6 +49,7 @@ const VOICE_SAMPLE_PROMPTS = [
 ];
 
 export function App() {
+  const mainRef = useRef<HTMLDivElement | null>(null);
   const plpScrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const isTypingFocusedRef = useRef(false);
@@ -78,7 +80,6 @@ export function App() {
   const [activeView, setActiveView] = useState<ActiveSheetView>("cold-start");
   const [isTypingFocused, setIsTypingFocused] = useState(false);
   const [isExpandingFromSubmit, setIsExpandingFromSubmit] = useState(false);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [orbBloomKey, setOrbBloomKey] = useState(1);
   const [craftSessionId, setCraftSessionId] = useState(1);
   const [selectedStarterId, setSelectedStarterId] = useState<StarterAction["id"] | null>(
@@ -89,15 +90,15 @@ export function App() {
     const syncViewport = () => {
       const vv = window.visualViewport;
       const scale = vv?.scale ?? 1;
+      const mainHeight = mainRef.current?.clientHeight || window.innerHeight;
       const occludedBottom =
         vv && scale <= 1.05
-          ? Math.max(0, Math.round(window.innerHeight - (vv.height + vv.offsetTop)))
+          ? Math.max(0, Math.round(mainHeight - (vv.height + vv.offsetTop)))
           : 0;
       const isKbActive = occludedBottom >= 40;
       const insetPx = isKbActive ? occludedBottom : 0;
 
       document.documentElement.style.setProperty("--keyboard-inset", `${insetPx}px`);
-      setKeyboardOpen(isKbActive);
 
       if (sheetOpen && (window.scrollY !== 0 || window.scrollX !== 0)) {
         window.scrollTo(0, 0);
@@ -105,8 +106,8 @@ export function App() {
 
       setViewportHeight((prev) =>
         !isKbActive && !isTypingFocusedRef.current
-          ? window.innerHeight
-          : Math.max(prev, window.innerHeight)
+          ? mainHeight
+          : Math.max(prev, mainHeight)
       );
     };
 
@@ -187,12 +188,11 @@ export function App() {
         (firstTurn.stage === "loading" || firstTurn.stage === "exiting-loading")));
 
   // Persistent LiquidOrb state:
-  // - "hero" on Cold Start
+  // - "hero" on Cold Start (when typing is focused, hiddenForTyping fades it gently in place with zero blur stall)
   // - "thinking" as Cold Start exits & during initial thinking/loading (glides smoothly upward, never unmounts)
-  // - "receded" during Focused Typing View / exiting-thinking / exiting-loading / answered / selecting / compared / reset
-  const orbStageState: OrbStageState = isTypingFocused
-    ? "receded"
-    : activeView === "cold-start"
+  // - "receded" during exiting-thinking / exiting-loading / answered / selecting / compared / reset
+  const orbStageState: OrbStageState =
+    activeView === "cold-start"
       ? "hero"
       : activeView === "exiting-cold-start" ||
           (isInitialExchange && activeView === "thread" && isFirstTurnActiveThinking)
@@ -416,6 +416,11 @@ export function App() {
       }
 
       clearPendingTimers();
+      if (wasTypingFocused) {
+        scheduleTimer(() => {
+          setIsExpandingFromSubmit(false);
+        }, TYPING_STAGE_SETTLE_MS);
+      }
       setInputValue("");
       setResumeDismissed(false);
       setPickerTarget(null);
@@ -895,10 +900,15 @@ export function App() {
       : undefined;
 
   return (
-    <LayerGrid
+    /* Safari 26 toolbar sampling: keep fixed shell bg-transparent and put surfaces on absolute inset-0 child */
+    <Box
       as="main"
-      className="mobile-viewport-lock bg-surface overflow-hidden isolate select-none"
+      className="mobile-viewport-lock bg-transparent isolate"
     >
+      <div
+        ref={mainRef}
+        className="absolute inset-0 bg-surface overflow-hidden isolate select-none stack-grid"
+      >
         {/* Layer 1: Scrollable Handbags PLP + Inline Content Spot */}
         <Layer className="w-full h-full overflow-hidden isolate z-0">
           <PlpListing
@@ -940,7 +950,6 @@ export function App() {
               stageHeight={stageHeight}
               isTypingFocused={isTypingFocused}
               isExpandingFromSubmit={isExpandingFromSubmit}
-              keyboardOpen={keyboardOpen}
               staggerChrome={isInitialOpenStagger}
               showNewChat={showNewChat}
               onNewChat={handleNewChat}
@@ -983,6 +992,7 @@ export function App() {
                     stageState={orbStageState}
                     bloomKey={orbBloomKey}
                     staggerEntrance={isInitialOpenStagger}
+                    hiddenForTyping={isTypingFocused}
                   />
                 </Layer>
 
@@ -1024,7 +1034,8 @@ export function App() {
                           <ColdStartView
                             selectedStarterId={selectedStarterId}
                             sheetOpenStagger={isInitialOpenStagger}
-                            alreadyHidden={isTypingFocused || isExpandingFromSubmit}
+                            hiddenForTyping={isTypingFocused}
+                            alreadyHidden={isExpandingFromSubmit}
                             onSelectStarter={handleSelectStarter}
                           />
                         </motion.div>
@@ -1033,8 +1044,33 @@ export function App() {
                       {activeView === "thread" && (
                         <motion.div
                           key={`stage-thread-${craftSessionId}`}
-                          initial={{ opacity: 1 }}
-                          animate={{ opacity: 1 }}
+                          initial={
+                            isExpandingFromSubmit
+                              ? { opacity: 0, scale: 0.985, y: 8 }
+                              : { opacity: 1 }
+                          }
+                          animate={
+                            isTypingFocused
+                              ? {
+                                  opacity: 0,
+                                  scale: 0.985,
+                                  y: -6,
+                                  transition: {
+                                    duration: 0.19,
+                                    ease: EASE_PREMIUM,
+                                  },
+                                }
+                              : {
+                                  opacity: 1,
+                                  scale: 1,
+                                  y: 0,
+                                  transition: {
+                                    duration: 0.34,
+                                    delay: isExpandingFromSubmit ? 0.12 : 0.15,
+                                    ease: EASE_PREMIUM,
+                                  },
+                                }
+                          }
                           exit={{
                             opacity: 0,
                             filter: "blur(3px)",
@@ -1043,7 +1079,7 @@ export function App() {
                             transition: { duration: DURATION_EXIT, ease: EASE_PREMIUM },
                           }}
                           className={clsx(
-                            "stack-cell w-full h-full min-h-0 overflow-visible transition-stage-inset motion-reduce:transition-none",
+                            "stack-cell w-full h-full min-h-0 overflow-visible transition-stage-inset motion-reduce:transition-none will-change-transform",
                             orbStageState === "thinking" ? "pt-144" : "pt-0"
                           )}
                         >
@@ -1070,7 +1106,8 @@ export function App() {
             </AssistantSheetShell>
           </div>
         </Layer>
-    </LayerGrid>
+      </div>
+    </Box>
   );
 }
 
