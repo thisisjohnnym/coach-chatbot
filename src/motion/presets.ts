@@ -17,6 +17,8 @@ export const EXIT_SETTLE_MS = 580;
 export const COLD_START_EXIT_DURATION = 0.56;
 export const COLD_START_SETTLE_MS = 580;
 export const RESUME_PILL_DELAY_MS = 260;
+export const FOCUSED_TYPING_STAGE_HEIGHT = 14;
+export const TYPING_STAGE_SETTLE_MS = 460;
 
 export const TRANSITION_ENTER: Transition = {
   duration: DURATION_ENTER,
@@ -45,6 +47,16 @@ export const TRANSITION_SHEET_CLOSE: Transition = {
 
 export const TRANSITION_SHEET_HEIGHT: Transition = {
   duration: 0.8,
+  ease: EASE_PREMIUM,
+};
+
+export const TRANSITION_TYPING_ENTER: Transition = {
+  duration: 0.34,
+  ease: EASE_PREMIUM,
+};
+
+export const TRANSITION_TYPING_EXIT: Transition = {
+  duration: 0.44,
   ease: EASE_PREMIUM,
 };
 

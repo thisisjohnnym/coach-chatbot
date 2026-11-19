@@ -324,14 +324,35 @@
 @keyframes orb-liquid-morph {
   0%,
   100% {
-    border-radius: 52% 48% 51% 49% / 49% 53% 47% 51%;
+    transform: rotate(0deg) scale3d(1, 1, 1);
   }
   33% {
-    border-radius: 47% 53% 48% 52% / 53% 48% 52% 47%;
+    transform: rotate(2.5deg) scale3d(1.035, 0.97, 1);
   }
   66% {
-    border-radius: 54% 46% 53% 47% / 48% 51% 49% 52%;
+    transform: rotate(-2.5deg) scale3d(0.97, 1.035, 1);
   }
+}
+
+/* WebKit-safe LiquidOrb feather + hard radial mask (avoids Safari overflow:hidden + filter rectangular clip bug) */
+@utility orb-feather {
+  -webkit-filter: blur(5.5px);
+  filter: blur(5.5px);
+  transform: translateZ(0);
+}
+
+@utility orb-sphere-mask {
+  border-radius: 9999px;
+  -webkit-mask-image: radial-gradient(
+    circle closest-side,
+    #000000 98.5%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    circle closest-side,
+    #000000 98.5%,
+    transparent 100%
+  );
 }
 
 @keyframes typing-dot-bounce {
@@ -423,6 +444,45 @@
   padding-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
 }
 
+@utility pb-safe-dock-focused {
+  padding-bottom: max(18px, calc(env(safe-area-inset-bottom, 0px) + 10px));
+}
+
+@utility pb-keyboard-dock {
+  padding-bottom: 18px;
+}
+
+@utility pb-keyboard-inset {
+  padding-bottom: var(--keyboard-inset, 0px);
+  transition-property: padding-bottom;
+  transition-duration: 280ms;
+  transition-timing-function: var(--ease-premium);
+}
+
+@utility h-stage-content {
+  height: var(--stage-content-height, 100%);
+}
+
+@utility transition-dock-focus {
+  transition-property: padding, gap, background-color, border-color;
+  transition-duration: 320ms;
+  transition-timing-function: var(--ease-premium);
+}
+
+@utility ios-safe-prompt-field {
+  font-size: var(--text-body);
+  line-height: 1.35;
+  field-sizing: content;
+  @media (hover: none) and (pointer: coarse) {
+    /* 16px computed font-size prevents iOS Safari forced viewport auto-zoom while preserving 14px Figma optical scale */
+    font-size: var(--text-subhead);
+    width: 114.2857%;
+    transform: scale(0.875);
+    transform-origin: top left;
+    margin-bottom: -6px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -438,6 +498,7 @@
   body,
   #root {
     height: 100%;
+    overflow: hidden;
   }
 
   /* Explicit non-transparent page fill on html + body for Safari 26 toolbar sampling */

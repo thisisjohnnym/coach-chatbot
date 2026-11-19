@@ -708,7 +708,7 @@ export function ChatThreadView({
       <ProgressiveBlurEdge position="top" visible={hasTopEdge} />
       <ProgressiveBlurEdge position="bottom" visible={hasBottomEdge} />
 
-      <Layer className="self-end justify-self-center pb-10 pointer-events-none">
+      <Layer className="z-20 self-end justify-self-center pb-10 pointer-events-none">
         <AnimatePresence>
           {hasBottomEdge && (
             <motion.button

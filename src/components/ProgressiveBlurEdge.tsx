@@ -70,7 +70,7 @@ export function ProgressiveBlurEdge({
     <LayerGrid
       aria-hidden="true"
       className={clsx(
-        "w-full h-36 pointer-events-none transition-opacity duration-500 motion-reduce:transition-none",
+        "stack-cell z-10 w-full h-36 pointer-events-none transition-opacity duration-500 motion-reduce:transition-none",
         position === "top" ? "self-start" : "self-end",
         visible ? "opacity-100" : "opacity-0",
         className

@@ -13,6 +13,7 @@ import { Box, Stack } from "../primitives/Layout";
 export interface ColdStartViewProps {
   selectedStarterId: StarterAction["id"] | null;
   sheetOpenStagger?: boolean;
+  alreadyHidden?: boolean;
   onSelectStarter: (action: StarterAction) => void;
 }
 
@@ -22,6 +23,7 @@ const ROW_TWO_ACTIONS = COLD_START_ACTIONS.filter((action) => action.row === 2);
 export function ColdStartView({
   selectedStarterId,
   sheetOpenStagger = false,
+  alreadyHidden = false,
   onSelectStarter,
 }: ColdStartViewProps) {
   const isExitingSelection = selectedStarterId !== null;
@@ -33,7 +35,7 @@ export function ColdStartView({
       <motion.button
         key={action.id}
         type="button"
-        variants={blurScaleVariants}
+        variants={alreadyHidden ? undefined : blurScaleVariants}
         aria-pressed={isSelected}
         onClick={() => onSelectStarter(action)}
         className={clsx(
@@ -74,13 +76,17 @@ export function ColdStartView({
             ease: EASE_PREMIUM,
           },
         }}
-        exit={{
-          opacity: 0,
-          scale: 0.95,
-          filter: "blur(3px)",
-          y: -10,
-          transition: { duration: DURATION_EXIT, ease: EASE_PREMIUM },
-        }}
+        exit={
+          alreadyHidden
+            ? { opacity: 0, transition: { duration: 0 } }
+            : {
+                opacity: 0,
+                scale: 0.95,
+                filter: "blur(3px)",
+                y: -10,
+                transition: { duration: DURATION_EXIT, ease: EASE_PREMIUM },
+              }
+        }
         className="pt-2 pb-14 px-10 w-full text-center"
       >
         <h2 className="text-heading text-ink-inverse tracking-sm font-normal text-balance m-0">
@@ -97,7 +103,9 @@ export function ColdStartView({
               delayChildren: sheetOpenStagger ? 0.34 : 0.11,
             },
           },
-          exit: staggerGridVariants.exit,
+          exit: alreadyHidden
+            ? { opacity: 0, transition: { duration: 0 } }
+            : staggerGridVariants.exit,
         }}
         initial="hidden"
         animate="visible"

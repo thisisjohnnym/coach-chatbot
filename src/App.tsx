@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import clsx from "clsx";
 import {
@@ -17,6 +17,7 @@ import {
   DURATION_EXIT,
   EASE_PREMIUM,
   EXIT_SETTLE_MS,
+  FOCUSED_TYPING_STAGE_HEIGHT,
   RESUME_PILL_DELAY_MS,
 } from "./motion/presets";
 import { PlpListing } from "./components/PlpListing";
@@ -48,6 +49,9 @@ const VOICE_SAMPLE_PROMPTS = [
 
 export function App() {
   const plpScrollRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const isTypingFocusedRef = useRef(false);
+  const closingSheetRef = useRef(false);
   const timersRef = useRef<number[]>([]);
   const voiceTimersRef = useRef<number[]>([]);
   const voiceIdxRef = useRef(0);
@@ -65,12 +69,6 @@ export function App() {
     typeof window !== "undefined" ? window.innerHeight : 930
   );
 
-  useEffect(() => {
-    const handleResize = () => setViewportHeight(window.innerHeight);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   // Assistant sheet & strict non-overlapping stage state
   const [sheetOpen, setSheetOpen] = useState(false);
   const [floatingVisible, setFloatingVisible] = useState(true);
@@ -78,11 +76,58 @@ export function App() {
   const [enteredFromColdStart, setEnteredFromColdStart] = useState(true);
   const [isInitialExchange, setIsInitialExchange] = useState(true);
   const [activeView, setActiveView] = useState<ActiveSheetView>("cold-start");
+  const [isTypingFocused, setIsTypingFocused] = useState(false);
+  const [isExpandingFromSubmit, setIsExpandingFromSubmit] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [orbBloomKey, setOrbBloomKey] = useState(1);
   const [craftSessionId, setCraftSessionId] = useState(1);
   const [selectedStarterId, setSelectedStarterId] = useState<StarterAction["id"] | null>(
     null
   );
+
+  useEffect(() => {
+    const syncViewport = () => {
+      const vv = window.visualViewport;
+      const scale = vv?.scale ?? 1;
+      const occludedBottom =
+        vv && scale <= 1.05
+          ? Math.max(0, Math.round(window.innerHeight - (vv.height + vv.offsetTop)))
+          : 0;
+      const isKbActive = occludedBottom >= 40;
+      const insetPx = isKbActive ? occludedBottom : 0;
+
+      document.documentElement.style.setProperty("--keyboard-inset", `${insetPx}px`);
+      setKeyboardOpen(isKbActive);
+
+      if (sheetOpen && (window.scrollY !== 0 || window.scrollX !== 0)) {
+        window.scrollTo(0, 0);
+      }
+
+      setViewportHeight((prev) =>
+        !isKbActive && !isTypingFocusedRef.current
+          ? window.innerHeight
+          : Math.max(prev, window.innerHeight)
+      );
+    };
+
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", syncViewport);
+    vv?.addEventListener("scroll", syncViewport);
+
+    return () => {
+      window.removeEventListener("resize", syncViewport);
+      vv?.removeEventListener("resize", syncViewport);
+      vv?.removeEventListener("scroll", syncViewport);
+    };
+  }, [sheetOpen]);
+
+  useEffect(() => {
+    return () => {
+      document.documentElement.style.setProperty("--keyboard-inset", "0px");
+    };
+  }, []);
 
   // Unified multi-turn thread (ChatMessageTurn | CompareThreadTurn)
   const [turns, setTurns] = useState<ThreadTurn[]>([]);
@@ -144,16 +189,17 @@ export function App() {
   // Persistent LiquidOrb state:
   // - "hero" on Cold Start
   // - "thinking" as Cold Start exits & during initial thinking/loading (glides smoothly upward, never unmounts)
-  // - "receded" during exiting-thinking / exiting-loading / answered / selecting / compared / reset
-  const orbStageState: OrbStageState =
-    activeView === "cold-start"
+  // - "receded" during Focused Typing View / exiting-thinking / exiting-loading / answered / selecting / compared / reset
+  const orbStageState: OrbStageState = isTypingFocused
+    ? "receded"
+    : activeView === "cold-start"
       ? "hero"
       : activeView === "exiting-cold-start" ||
-        (isInitialExchange && activeView === "thread" && isFirstTurnActiveThinking)
-      ? "thinking"
-      : "receded";
+          (isInitialExchange && activeView === "thread" && isFirstTurnActiveThinking)
+        ? "thinking"
+        : "receded";
 
-  const showNewChat = activeView === "thread";
+  const showNewChat = activeView === "thread" && !isTypingFocused;
 
   const rawStageHeight =
     activeView === "cold-start" ||
@@ -164,7 +210,35 @@ export function App() {
       ? 320
       : 488;
 
-  const stageHeight = Math.min(rawStageHeight, Math.max(260, viewportHeight - 204));
+  const restingStageHeight = Math.min(rawStageHeight, Math.max(260, viewportHeight - 204));
+  const stageHeight = isTypingFocused ? FOCUSED_TYPING_STAGE_HEIGHT : restingStageHeight;
+
+  useLayoutEffect(() => {
+    document.documentElement.style.setProperty(
+      "--stage-content-height",
+      `${restingStageHeight}px`
+    );
+  }, [restingStageHeight]);
+
+  const handleTypingFocusChange = useCallback((focused: boolean) => {
+    if (!focused && closingSheetRef.current) {
+      return;
+    }
+    isTypingFocusedRef.current = focused;
+    setIsTypingFocused(focused);
+    if (focused) {
+      setIsInitialOpenStagger(false);
+      setIsExpandingFromSubmit(false);
+      setPickerTarget(null);
+    }
+  }, []);
+
+  const handleDismissTyping = useCallback(() => {
+    isTypingFocusedRef.current = false;
+    setIsExpandingFromSubmit(false);
+    setIsTypingFocused(false);
+    inputRef.current?.blur();
+  }, []);
 
   const handleSelectSpotMode = useCallback((mode: ContentSpotMode) => {
     setContentSpotMode(mode);
@@ -334,6 +408,13 @@ export function App() {
       const openingSheetNow = options?.openingSheetNow ?? false;
       const withThinkingOrb = options?.withThinkingOrb ?? false;
 
+      const wasTypingFocused = isTypingFocusedRef.current;
+      if (wasTypingFocused) {
+        isTypingFocusedRef.current = false;
+        setIsTypingFocused(false);
+        setIsExpandingFromSubmit(true);
+      }
+
       clearPendingTimers();
       setInputValue("");
       setResumeDismissed(false);
@@ -371,8 +452,12 @@ export function App() {
         });
       };
 
-      // If currently on Cold Start, exit Cold Start FIRST (while Orb glides upward), then enter Thread!
-      if ((activeView === "cold-start" || activeView === "exiting-cold-start") && sheetOpen) {
+      // If currently on Cold Start (and not already collapsed in Focused Typing View), exit Cold Start FIRST, then enter Thread!
+      if (
+        (activeView === "cold-start" || activeView === "exiting-cold-start") &&
+        sheetOpen &&
+        !wasTypingFocused
+      ) {
         setIsInitialExchange(withThinkingOrb);
         setActiveView("exiting-cold-start");
         scheduleTimer(runDispatch, COLD_START_SETTLE_MS);
@@ -395,6 +480,10 @@ export function App() {
   const handleOpenFromContentSpot = useCallback(
     (mode: ContentSpotMode) => {
       clearPendingTimers();
+      closingSheetRef.current = false;
+      isTypingFocusedRef.current = false;
+      setIsTypingFocused(false);
+      setIsExpandingFromSubmit(false);
       setResumeDismissed(false);
       setPickerTarget(null);
       setSelectedStarterId(null);
@@ -424,6 +513,10 @@ export function App() {
 
   const handleNewChat = useCallback(() => {
     clearPendingTimers();
+    isTypingFocusedRef.current = false;
+    setIsTypingFocused(false);
+    setIsExpandingFromSubmit(false);
+    inputRef.current?.blur();
     setPickerTarget(null);
     setSelectedStarterId(null);
     setIsInitialExchange(false);
@@ -447,9 +540,15 @@ export function App() {
 
   const handleCloseSheet = useCallback(() => {
     clearPendingTimers();
+    closingSheetRef.current = true;
+    inputRef.current?.blur();
     setPickerTarget(null);
     setSheetOpen(false);
     scheduleTimer(() => {
+      closingSheetRef.current = false;
+      isTypingFocusedRef.current = false;
+      setIsTypingFocused(false);
+      setIsExpandingFromSubmit(false);
       if (turns.length === 0) {
         setSelectedStarterId(null);
         setActiveView("cold-start");
@@ -460,6 +559,10 @@ export function App() {
 
   const handleResumeChat = useCallback(() => {
     clearPendingTimers();
+    closingSheetRef.current = false;
+    isTypingFocusedRef.current = false;
+    setIsTypingFocused(false);
+    setIsExpandingFromSubmit(false);
     setResumeDismissed(false);
     setFloatingVisible(false);
     scheduleTimer(() => {
@@ -470,6 +573,10 @@ export function App() {
 
   const handleOpenFreshFromFab = useCallback(() => {
     clearPendingTimers();
+    closingSheetRef.current = false;
+    isTypingFocusedRef.current = false;
+    setIsTypingFocused(false);
+    setIsExpandingFromSubmit(false);
     setFloatingVisible(false);
     scheduleTimer(() => {
       if (hasResumableSession && !resumeDismissed) {
@@ -831,10 +938,16 @@ export function App() {
             <AssistantSheetShell
               open={sheetOpen}
               stageHeight={stageHeight}
+              isTypingFocused={isTypingFocused}
+              isExpandingFromSubmit={isExpandingFromSubmit}
+              keyboardOpen={keyboardOpen}
               staggerChrome={isInitialOpenStagger}
               showNewChat={showNewChat}
               onNewChat={handleNewChat}
               onClose={handleCloseSheet}
+              onTypingFocusChange={handleTypingFocusChange}
+              onDismissTyping={handleDismissTyping}
+              inputRef={inputRef}
               inputValue={inputValue}
               onInputChange={setInputValue}
               onSubmitPrompt={(prompt) =>
@@ -877,7 +990,7 @@ export function App() {
                 <Layer className="w-full h-full min-h-0 z-20 overflow-visible">
                   <LayerGrid className="w-full h-full min-h-0 grid-rows-1 overflow-visible">
                     <AnimatePresence
-                      mode="wait"
+                      mode={isExpandingFromSubmit ? "sync" : "wait"}
                       initial={isInitialOpenStagger ? undefined : false}
                     >
                       {activeView === "cold-start" && (
@@ -895,18 +1008,23 @@ export function App() {
                             y: 0,
                             transition: { duration: DURATION_ENTER, ease: EASE_PREMIUM },
                           }}
-                          exit={{
-                            opacity: 1,
-                            transition: {
-                              duration: COLD_START_EXIT_DURATION,
-                              ease: EASE_PREMIUM,
-                            },
-                          }}
+                          exit={
+                            isExpandingFromSubmit
+                              ? { opacity: 0, transition: { duration: 0 } }
+                              : {
+                                  opacity: 1,
+                                  transition: {
+                                    duration: COLD_START_EXIT_DURATION,
+                                    ease: EASE_PREMIUM,
+                                  },
+                                }
+                          }
                           className="stack-cell w-full h-full min-h-0 overflow-visible"
                         >
                           <ColdStartView
                             selectedStarterId={selectedStarterId}
                             sheetOpenStagger={isInitialOpenStagger}
+                            alreadyHidden={isTypingFocused || isExpandingFromSubmit}
                             onSelectStarter={handleSelectStarter}
                           />
                         </motion.div>
