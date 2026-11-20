@@ -183,10 +183,11 @@ export function AssistantSheetShell({
                 <img
                   src="/assets/figma/sheet-bg.png"
                   alt=""
-                  className="stack-cell w-full h-full object-cover scale-110"
+                  className="stack-cell z-0 w-full h-full object-cover scale-110"
                 />
-                <Box className="stack-cell w-full h-full bg-surface-sheet-wash" />
-                <Box className="stack-cell w-full h-full sheet-radial-sheen mix-blend-plus-lighter" />
+                <Box className="stack-cell z-10 w-full h-full sheet-radial-sheen mix-blend-plus-lighter" />
+                {/* z-20: scale/blend on siblings create stacking contexts that otherwise bury this 40% black wash */}
+                <Box className="stack-cell z-20 w-full h-full bg-surface-sheet-wash" />
               </Layer>
 
               {/* Foreground sheet chrome + continuous stage */}

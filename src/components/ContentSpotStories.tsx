@@ -260,15 +260,16 @@ export function ContentSpotStories({
             <img
               src="/assets/figma/sheet-bg.png"
               alt=""
-              className="stack-cell w-full h-701 object-cover scale-105"
+              className="stack-cell z-0 w-full h-701 object-cover scale-105"
             />
-            <Box className="stack-cell w-full h-701 bg-surface-sheet-wash" />
-            <Box className="stack-cell w-full h-701 sheet-radial-sheen mix-blend-plus-lighter" />
+            <Box className="stack-cell z-10 w-full h-701 sheet-radial-sheen mix-blend-plus-lighter" />
             <img
               src="/assets/figma/stories-light-streak.svg"
               alt=""
-              className="stack-cell self-center w-full h-auto max-w-none opacity-90 mix-blend-plus-lighter"
+              className="stack-cell z-10 self-center w-full h-auto max-w-none opacity-90 mix-blend-plus-lighter"
             />
+            {/* z-20: scale/blend on siblings create stacking contexts that otherwise bury this 40% black wash */}
+            <Box className="stack-cell z-20 w-full h-701 bg-surface-sheet-wash" />
           </Layer>
 
           {/* Layer 1: Stories chrome, animated slide stage, and bottom CTA dock */}
