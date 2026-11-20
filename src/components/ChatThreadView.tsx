@@ -487,6 +487,7 @@ export function ChatThreadView({
                 >
                   <OutfitTurnItem
                     turn={turn}
+                    sheetOpenStagger={sheetOpenStagger && turnIdx === 0}
                     registerChoiceGroupRef={registerChoiceGroupRef}
                     onPickSelfie={onPickSelfie}
                     onInspectBag={onInspectBag}

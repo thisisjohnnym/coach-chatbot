@@ -241,6 +241,35 @@ export const STATEMENT_PROMPT = "Show me something that makes a statement";
 
 export const OUTFIT_STARTER_PROMPT = "Match a bag to my outfit";
 
+export const STORIES_COMPARE_PAIR: [BagProduct, BagProduct] = [
+  BAG_CATALOG[2], // Juliet Shoulder Bag 25 ($525) — Quilted Leather
+  BAG_CATALOG[0], // Tabby Shoulder Bag 26 ($475) — Soft Leather
+];
+
+export interface StoriesStarterCard {
+  id: "two-ways" | "statement" | "going-out";
+  lines: [string, string];
+  prompt: string;
+}
+
+export const STORIES_STARTER_CARDS: StoriesStarterCard[] = [
+  {
+    id: "two-ways",
+    lines: ["Can be worn", "two ways"],
+    prompt: "Show me bags that can be worn two ways",
+  },
+  {
+    id: "statement",
+    lines: ["Something that", "makes a statement"],
+    prompt: STATEMENT_PROMPT,
+  },
+  {
+    id: "going-out",
+    lines: ["Match my going", "out look"],
+    prompt: "Match my going out look",
+  },
+];
+
 export const OUTFIT_SELFIE_PREVIEW = {
   image: "/assets/figma/ad-model.png",
   title: "Your look",
@@ -344,6 +373,22 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
         "Compare Brooklyn 28 and Chelsea 30",
         "More with gold hardware",
         "Which is best for going out?",
+      ],
+    };
+  }
+
+  if (lower.includes("two ways") || lower.includes("crossbody")) {
+    return {
+      leadParagraphs: [
+        "Convertible straps give you two distinct looks in one bag — tuck one under your arm for dinner, then clip on the long strap when you want hands-free ease.",
+      ],
+      bags: [BAG_CATALOG[0], BAG_CATALOG[1], BAG_CATALOG[2]],
+      followUpNote:
+        "Tabby 26 and Soft Tabby 20 include detachable shoulder and crossbody straps, while Juliet 25 switches between a leather strap and a sculptural chain.",
+      options: [
+        "Compare Tabby 26 and Soft Tabby 20",
+        "Which is best for going out?",
+        "More with gold hardware",
       ],
     };
   }

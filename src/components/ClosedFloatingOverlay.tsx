@@ -21,7 +21,10 @@ export interface ClosedFloatingOverlayProps {
   showResumePill: boolean;
   contentSpotMode: ContentSpotMode;
   contentSpotDismissed: boolean;
+  scenarioSelectorDismissed?: boolean;
+  hideScenarioSelector?: boolean;
   onSelectSpotMode: (mode: ContentSpotMode) => void;
+  onDismissScenarioSelector?: () => void;
   onResumeChat: () => void;
   onScrollTop: () => void;
   onOpenFreshChat: () => void;
@@ -44,7 +47,10 @@ export function ClosedFloatingOverlay({
   showResumePill,
   contentSpotMode,
   contentSpotDismissed,
+  scenarioSelectorDismissed = false,
+  hideScenarioSelector = false,
   onSelectSpotMode,
+  onDismissScenarioSelector,
   onResumeChat,
   onScrollTop,
   onOpenFreshChat,
@@ -93,9 +99,9 @@ export function ClosedFloatingOverlay({
                 : "exit"
             }
             transition={prefersReducedMotion ? { duration: 0 } : undefined}
-            className="stack-cell self-end z-20 pointer-events-none w-full min-w-0 pb-safe-overlay px-12 flex flex-col gap-10"
+            className="stack-cell self-end z-20 pointer-events-none w-full min-w-0 pb-safe-overlay flex flex-col"
           >
-            <Box className="flex flex-row items-end justify-between gap-8 w-full min-w-0">
+            <Box className="flex flex-row items-end justify-between gap-8 w-full min-w-0 px-12">
               {/* Left slot keeps FABs pinned right whether resume pill is shown, exiting, or hidden */}
               <Box className="flex items-end min-w-0">
                 <AnimatePresence mode="wait">
@@ -196,58 +202,104 @@ export function ClosedFloatingOverlay({
               </Stack>
             </Box>
 
-            <Box className="flex justify-center w-full min-w-0">
-              <Cluster
-                as="nav"
-                aria-label="Entry scenario selector"
+            {!hideScenarioSelector && (
+              <Box
                 className={clsx(
-                  visible ? "pointer-events-auto" : "pointer-events-none",
-                  "min-w-0 max-w-full overflow-x-auto no-scrollbar bg-surface-selector backdrop-blur-md border border-border-dock rounded-pill p-4 gap-3 shadow-fab",
+                  "disclosure-grid w-full min-w-0 motion-reduce:transition-none",
+                  scenarioSelectorDismissed
+                    ? "disclosure-closed"
+                    : "disclosure-open",
                 )}
               >
-                <button
-                  type="button"
-                  aria-pressed={contentSpotMode === "general" && !contentSpotDismissed}
-                  onClick={() => onSelectSpotMode("general")}
-                  className={clsx(
-                    "h-32 px-9 shrink-0 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
-                    contentSpotMode === "general" && !contentSpotDismissed
-                      ? "bg-surface text-ink font-medium"
-                      : "text-ink-inverse-soft hover:text-ink-inverse",
-                  )}
+                <Box
+                  inert={scenarioSelectorDismissed || undefined}
+                  className="overflow-hidden min-h-0 w-full min-w-0"
                 >
-                  General Copy
-                </button>
+                  <Box className="pt-10 px-12 flex justify-center w-full min-w-0">
+                    <Cluster
+                      as="nav"
+                      aria-label="Entry scenario selector"
+                      className={clsx(
+                        visible && !scenarioSelectorDismissed
+                          ? "pointer-events-auto"
+                          : "pointer-events-none",
+                        "min-w-0 max-w-full bg-surface-selector backdrop-blur-md border border-border-dock rounded-pill p-4 gap-3 shadow-fab",
+                      )}
+                    >
+                      <Cluster className="min-w-0 overflow-x-auto no-scrollbar gap-3">
+                        <button
+                          type="button"
+                          aria-pressed={
+                            contentSpotMode === "general" && !contentSpotDismissed
+                          }
+                          onClick={() => onSelectSpotMode("general")}
+                          className={clsx(
+                            "h-32 px-9 shrink-0 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                            contentSpotMode === "general" && !contentSpotDismissed
+                              ? "bg-surface text-ink font-medium"
+                              : "text-ink-inverse-soft hover:text-ink-inverse",
+                          )}
+                        >
+                          General Copy
+                        </button>
 
-                <button
-                  type="button"
-                  aria-pressed={contentSpotMode === "prompted" && !contentSpotDismissed}
-                  onClick={() => onSelectSpotMode("prompted")}
-                  className={clsx(
-                    "h-32 px-9 shrink-0 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
-                    contentSpotMode === "prompted" && !contentSpotDismissed
-                      ? "bg-surface text-ink font-medium"
-                      : "text-ink-inverse-soft hover:text-ink-inverse",
-                  )}
-                >
-                  Prompted Ad
-                </button>
+                        <button
+                          type="button"
+                          aria-pressed={
+                            contentSpotMode === "prompted" && !contentSpotDismissed
+                          }
+                          onClick={() => onSelectSpotMode("prompted")}
+                          className={clsx(
+                            "h-32 px-9 shrink-0 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                            contentSpotMode === "prompted" && !contentSpotDismissed
+                              ? "bg-surface text-ink font-medium"
+                              : "text-ink-inverse-soft hover:text-ink-inverse",
+                          )}
+                        >
+                          Prompted Ad
+                        </button>
 
-                <button
-                  type="button"
-                  aria-pressed={contentSpotMode === "compare" && !contentSpotDismissed}
-                  onClick={() => onSelectSpotMode("compare")}
-                  className={clsx(
-                    "h-32 px-9 shrink-0 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
-                    contentSpotMode === "compare" && !contentSpotDismissed
-                      ? "bg-surface text-ink font-medium"
-                      : "text-ink-inverse-soft hover:text-ink-inverse",
-                  )}
-                >
-                  Compare Prompt
-                </button>
-              </Cluster>
-            </Box>
+                        <button
+                          type="button"
+                          aria-pressed={
+                            contentSpotMode === "compare" && !contentSpotDismissed
+                          }
+                          onClick={() => onSelectSpotMode("compare")}
+                          className={clsx(
+                            "h-32 px-9 shrink-0 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                            contentSpotMode === "compare" && !contentSpotDismissed
+                              ? "bg-surface text-ink font-medium"
+                              : "text-ink-inverse-soft hover:text-ink-inverse",
+                          )}
+                        >
+                          Compare Prompt
+                        </button>
+                      </Cluster>
+
+                      <Box
+                        aria-hidden="true"
+                        className="w-1 h-16 bg-border-divider shrink-0"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={onDismissScenarioSelector}
+                        aria-label="Dismiss scenario selector"
+                        className="size-32 shrink-0 rounded-pill flex items-center justify-center text-ink-inverse-soft hover:text-ink-inverse hover:bg-surface-tile-hover press-scale motion-reduce:transition-none"
+                      >
+                        <img
+                          src="/assets/figma/icon-close-sheet.svg"
+                          alt=""
+                          width={16}
+                          height={16}
+                          className="size-16 shrink-0 opacity-80"
+                        />
+                      </button>
+                    </Cluster>
+                  </Box>
+                </Box>
+              </Box>
+            )}
           </motion.div>
         ) : null}
       </AnimatePresence>

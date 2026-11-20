@@ -10,14 +10,21 @@ import {
 import { contextualIconVariants } from "../motion/presets";
 import { Box, Cluster, LayerGrid, Stack } from "../primitives/Layout";
 import { ContentSpotAd } from "./ContentSpotAd";
+import {
+  ContentSpotStories,
+  type StoriesSpotAction,
+} from "./ContentSpotStories";
 
 export interface PlpListingProps {
   scrollRef: RefObject<HTMLDivElement | null>;
   contentSpotMode: ContentSpotMode;
   contentSpotDismissed: boolean;
+  storiesVariant?: boolean;
+  storiesPaused?: boolean;
   bagCount?: number;
   recentComparePair?: [BagProduct, BagProduct];
   onOpenAssistant: (mode: ContentSpotMode) => void;
+  onTriggerStoriesAction?: (action: StoriesSpotAction) => void;
   onDismissContentSpot: () => void;
   onSelectBagFromGrid?: (bag: BagProduct) => void;
 }
@@ -110,13 +117,16 @@ export function PlpListing({
   scrollRef,
   contentSpotMode,
   contentSpotDismissed,
+  storiesVariant = false,
+  storiesPaused = false,
   bagCount = 0,
   recentComparePair = DEFAULT_RECENT_COMPARE_BAGS,
   onOpenAssistant,
+  onTriggerStoriesAction,
   onDismissContentSpot,
   onSelectBagFromGrid,
 }: PlpListingProps) {
-  const isCompareScenario = contentSpotMode === "compare";
+  const isCompareScenario = !storiesVariant && contentSpotMode === "compare";
   const activeRows = isCompareScenario ? PLP_COMPARE_ROWS : PLP_ROWS;
   const recentIds = isCompareScenario
     ? new Set([recentComparePair[0].id, recentComparePair[1].id])
@@ -318,14 +328,23 @@ export function PlpListing({
         ))}
       </Stack>
 
-      {/* Inline AI Content Spot banner after 8 products */}
-      <ContentSpotAd
-        mode={contentSpotMode}
-        dismissed={contentSpotDismissed}
-        recentComparePair={recentComparePair}
-        onOpenAssistant={onOpenAssistant}
-        onDismiss={onDismissContentSpot}
-      />
+      {/* Inline AI Content Spot after 8 products (Stories variant on /2, classic spot otherwise) */}
+      {storiesVariant && onTriggerStoriesAction ? (
+        <ContentSpotStories
+          dismissed={contentSpotDismissed}
+          paused={storiesPaused}
+          onTriggerAction={onTriggerStoriesAction}
+          onDismiss={onDismissContentSpot}
+        />
+      ) : (
+        <ContentSpotAd
+          mode={contentSpotMode}
+          dismissed={contentSpotDismissed}
+          recentComparePair={recentComparePair}
+          onOpenAssistant={onOpenAssistant}
+          onDismiss={onDismissContentSpot}
+        />
+      )}
 
       {/* Rows 4–6 below Content Spot */}
       <Stack className="w-full">

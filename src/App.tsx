@@ -25,6 +25,7 @@ import {
   TYPING_STAGE_SETTLE_MS,
 } from "./motion/presets";
 import { PlpListing } from "./components/PlpListing";
+import type { StoriesSpotAction } from "./components/ContentSpotStories";
 import { ClosedFloatingOverlay } from "./components/ClosedFloatingOverlay";
 import { AssistantSheetShell } from "./components/AssistantSheetShell";
 import { LiquidOrb, type OrbStageState } from "./components/LiquidOrb";
@@ -53,6 +54,18 @@ const VOICE_SAMPLE_PROMPTS = [
   "More with gold hardware",
 ];
 
+function detectStoriesVariant(): boolean {
+  if (typeof window === "undefined") return false;
+  const normalizedPath = window.location.pathname.replace(/\/+$/, "");
+  const params = new URLSearchParams(window.location.search);
+  return (
+    normalizedPath === "/2" ||
+    params.has("2") ||
+    params.get("v") === "2" ||
+    params.get("variant") === "stories"
+  );
+}
+
 export function App() {
   const mainRef = useRef<HTMLDivElement | null>(null);
   const plpScrollRef = useRef<HTMLDivElement | null>(null);
@@ -72,6 +85,7 @@ export function App() {
   const voiceIdxRef = useRef(0);
 
   // Storefront / Content Spot state
+  const [isStoriesVariant] = useState<boolean>(detectStoriesVariant);
   const [contentSpotMode, setContentSpotMode] = useState<ContentSpotMode>(() => {
     if (typeof window !== "undefined") {
       const param = new URLSearchParams(window.location.search).get("spot");
@@ -82,6 +96,7 @@ export function App() {
     return "general";
   });
   const [contentSpotDismissed, setContentSpotDismissed] = useState(false);
+  const [scenarioSelectorDismissed, setScenarioSelectorDismissed] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(() =>
     typeof window !== "undefined" ? window.innerHeight : 930
   );
@@ -416,6 +431,8 @@ export function App() {
       showUserBubble?: boolean;
       anchorChoiceGroupKey?: string;
       fromColdStart: boolean;
+      openingSheetNow?: boolean;
+      withThinkingOrb?: boolean;
     }) => {
       const {
         replaceThread,
@@ -423,6 +440,8 @@ export function App() {
         showUserBubble = true,
         anchorChoiceGroupKey,
         fromColdStart,
+        openingSheetNow = false,
+        withThinkingOrb,
       } = options;
 
       if (replaceThread) {
@@ -444,14 +463,15 @@ export function App() {
       };
 
       setEnteredFromColdStart(fromColdStart);
-      setIsInitialExchange(replaceThread);
-      setIsInitialOpenStagger(false);
+      setIsInitialExchange(withThinkingOrb ?? replaceThread);
+      setIsInitialOpenStagger(openingSheetNow);
       setActiveView("thread");
       setFloatingVisible(false);
       setSheetOpen(true);
       setTurns((prev) => (replaceThread ? [newTurn] : [...prev, newTurn]));
 
-      const startExitAt = 1280;
+      const openOffset = openingSheetNow ? 280 : 0;
+      const startExitAt = openOffset + 1280;
       scheduleTimer(() => {
         setIsInitialExchange(false);
         setTurns((prev) =>
@@ -697,6 +717,64 @@ export function App() {
       }
     },
     [clearPendingTimers, enqueueCompareTurn, recentlyViewedBags, submitPrompt]
+  );
+
+  const handleTriggerStoriesAction = useCallback(
+    (action: StoriesSpotAction) => {
+      clearPendingTimers();
+      closingSheetRef.current = false;
+      isTypingFocusedRef.current = false;
+      setIsTypingFocused(false);
+      setIsExpandingFromSubmit(false);
+      setPickerTarget(null);
+      setDetailBag(null);
+      setSelectedStarterId(null);
+      setCraftSessionId((s) => s + 1);
+      setOrbBloomKey((k) => k + 1);
+      setFloatingVisible(false);
+
+      if (action.kind === "prompt") {
+        submitPrompt(action.prompt, {
+          replaceThread: true,
+          fromColdStart: false,
+          openingSheetNow: true,
+          withThinkingOrb: true,
+        });
+      } else if (action.kind === "outfit") {
+        enqueueOutfitTurn({
+          replaceThread: true,
+          userPrompt: OUTFIT_STARTER_PROMPT,
+          showUserBubble: true,
+          fromColdStart: false,
+          openingSheetNow: true,
+          withThinkingOrb: true,
+        });
+      } else if (action.kind === "compare") {
+        const compareCopy = getCompareSpotCopy(action.pair);
+        enqueueCompareTurn({
+          replaceThread: true,
+          userPrompt: compareCopy.userPrompt,
+          showUserBubble: true,
+          showCompareIcon: true,
+          prefilledFromRecent: true,
+          interactionMode: "interactive-slots",
+          fromColdStart: false,
+          openingSheetNow: true,
+          withThinkingOrb: true,
+          preselectedA: action.pair[0],
+          preselectedB: action.pair[1],
+        });
+      } else {
+        resetSeenChatTurnIds();
+        setTurns([]);
+        setEnteredFromColdStart(true);
+        setIsInitialExchange(true);
+        setIsInitialOpenStagger(true);
+        setActiveView("cold-start");
+        setSheetOpen(true);
+      }
+    },
+    [clearPendingTimers, enqueueCompareTurn, enqueueOutfitTurn, submitPrompt]
   );
 
   const handleNewChat = useCallback(() => {
@@ -1183,9 +1261,12 @@ export function App() {
             scrollRef={plpScrollRef}
             contentSpotMode={contentSpotMode}
             contentSpotDismissed={contentSpotDismissed}
+            storiesVariant={isStoriesVariant}
+            storiesPaused={sheetOpen || Boolean(detailBag)}
             bagCount={bagIdsInCart.length}
             recentComparePair={recentlyViewedBags}
             onOpenAssistant={handleOpenFromContentSpot}
+            onTriggerStoriesAction={handleTriggerStoriesAction}
             onDismissContentSpot={() => setContentSpotDismissed(true)}
             onSelectBagFromGrid={handleSelectBagFromPlp}
           />
@@ -1198,7 +1279,10 @@ export function App() {
             showResumePill={resumePillReady && shouldShowRecoveryPill}
             contentSpotMode={contentSpotMode}
             contentSpotDismissed={contentSpotDismissed}
+            scenarioSelectorDismissed={scenarioSelectorDismissed}
+            hideScenarioSelector={isStoriesVariant}
             onSelectSpotMode={handleSelectSpotMode}
+            onDismissScenarioSelector={() => setScenarioSelectorDismissed(true)}
             onResumeChat={handleResumeChat}
             onScrollTop={handleScrollPlpTop}
             onOpenFreshChat={handleOpenFreshFromFab}

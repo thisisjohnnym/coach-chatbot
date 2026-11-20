@@ -36,11 +36,11 @@
   --color-surface-portrait: #bfb4ab;
   --color-surface-orb: #4b3a2d;
   --color-surface-orb-glow: #8b786a;
-  --color-surface-sheet: #5e4b3c;
-  --color-surface-sheet-wash: rgba(0, 0, 0, 0.2);
+  --color-surface-sheet: #3d3027;
+  --color-surface-sheet-wash: rgba(0, 0, 0, 0.4);
   --color-surface-tile: rgba(0, 0, 0, 0.12);
   --color-surface-tile-hover: rgba(255, 255, 255, 0.16);
-  --color-surface-dock: rgba(0, 0, 0, 0.38);
+  --color-surface-dock: rgba(0, 0, 0, 0.35);
   --color-surface-selector: rgba(20, 19, 18, 0.86);
   --color-surface-scrim: rgba(0, 0, 0, 0.68);
   --color-surface-modal-scrim: rgba(0, 0, 0, 0.6);
@@ -170,15 +170,13 @@
 }
 
 @utility sheet-radial-sheen {
-  background-image: radial-gradient(
-    ellipse 280px 380px at 58% 0%,
-    rgba(255, 255, 255, 0.22) 0%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 430 718' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%25' width='100%25' fill='url(%23grad)' opacity='0.2'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-10.5 37.55 -22.488 -6.2883 256.23 0.3896)'><stop stop-color='rgba(255,255,255,1)' offset='0'/><stop stop-color='rgba(255,255,255,0)' offset='1'/></radialGradient></defs></svg>");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 
 @utility send-orb-halo {
-  background-image: linear-gradient(135deg, #57453b 0%, #9a6a3f 50%, #d99671 100%);
+  background-image: linear-gradient(to left, #57453b 0%, #9a6a3f 50%, #d99671 100%);
   filter: blur(5.5px);
   transition-property: opacity, scale;
   transition-duration: 300ms;
@@ -551,15 +549,14 @@
 
 @utility ios-safe-prompt-field {
   font-size: var(--text-body);
-  line-height: 1.35;
+  line-height: 1.25;
   field-sizing: content;
   @media (hover: none) and (pointer: coarse) {
     /* 16px computed font-size prevents iOS Safari forced viewport auto-zoom while preserving 14px Figma optical scale */
     font-size: var(--text-subhead);
     width: 114.2857%;
     transform: scale(0.875);
-    transform-origin: top left;
-    margin-bottom: -6px;
+    transform-origin: left center;
   }
 }
 

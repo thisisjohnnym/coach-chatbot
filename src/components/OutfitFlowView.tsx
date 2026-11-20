@@ -43,6 +43,7 @@ export interface OutfitThreadTurn {
 
 export interface OutfitTurnItemProps {
   turn: OutfitThreadTurn;
+  sheetOpenStagger?: boolean;
   registerChoiceGroupRef: (key: string, node: HTMLDivElement | null) => void;
   onPickSelfie: (turnId: string) => void;
   onInspectBag?: (bag: BagProduct) => void;
@@ -62,6 +63,7 @@ export function resetSeenOutfitTurnIds() {
 
 export function OutfitTurnItem({
   turn,
+  sheetOpenStagger = false,
   registerChoiceGroupRef,
   onPickSelfie,
   onInspectBag,
@@ -84,10 +86,28 @@ export function OutfitTurnItem({
               seenOutfitBubbleTurnIds.add(turn.id);
             }
           }}
-          variants={upwardCraftedBubbleVariants}
-          initial={bubbleAlreadySeen ? false : "hidden"}
-          animate="visible"
-          exit="exit"
+          initial={
+            bubbleAlreadySeen
+              ? false
+              : {
+                  opacity: 0,
+                  scale: 0.92,
+                  filter: "blur(4px)",
+                  y: 28,
+                }
+          }
+          animate={{
+            opacity: 1,
+            scale: 1,
+            filter: "blur(0px)",
+            y: 0,
+            transition: {
+              duration: DURATION_ENTER,
+              delay: sheetOpenStagger ? 0.22 : 0,
+              ease: EASE_PREMIUM,
+            },
+          }}
+          exit={upwardCraftedBubbleVariants.exit as TargetAndTransition}
           className="self-end bg-surface text-ink px-10 py-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp max-w-210 shadow-bubble flex flex-row items-center gap-6"
         >
           {turn.userPrompt === OUTFIT_STARTER_PROMPT && (
@@ -131,7 +151,11 @@ export function OutfitTurnItem({
               y: 0,
               transition: {
                 duration: DURATION_ENTER,
-                delay: turn.showUserBubble ? 0.12 : 0,
+                delay: turn.showUserBubble
+                  ? sheetOpenStagger
+                    ? 0.34
+                    : 0.12
+                  : 0,
                 ease: EASE_PREMIUM,
               },
             }}

@@ -85,6 +85,13 @@ export function AssistantSheetShell({
 }: AssistantSheetShellProps) {
   const prefersReducedMotion = useReducedMotion();
   const [isStageSettling, setIsStageSettling] = useState(false);
+  const [hasActiveThread, setHasActiveThread] = useState(showNewChat);
+
+  useEffect(() => {
+    if (!isTypingFocused) {
+      setHasActiveThread(showNewChat);
+    }
+  }, [isTypingFocused, showNewChat]);
 
   useEffect(() => {
     if (isTypingFocused) {
@@ -176,7 +183,7 @@ export function AssistantSheetShell({
                 <img
                   src="/assets/figma/sheet-bg.png"
                   alt=""
-                  className="stack-cell w-full h-full object-cover scale-105"
+                  className="stack-cell w-full h-full object-cover scale-110"
                 />
                 <Box className="stack-cell w-full h-full bg-surface-sheet-wash" />
                 <Box className="stack-cell w-full h-full sheet-radial-sheen mix-blend-plus-lighter" />
@@ -350,6 +357,7 @@ export function AssistantSheetShell({
                     onSubmit={onSubmitPrompt}
                     onVoiceSample={onVoiceSample}
                     focused={isTypingFocused}
+                    isFollowUp={showNewChat || hasActiveThread}
                     onFocusChange={onTypingFocusChange}
                   />
                 </motion.div>
