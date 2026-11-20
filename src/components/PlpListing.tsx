@@ -8,16 +8,8 @@ import {
   type ContentSpotMode,
 } from "../data/catalog";
 import { contextualIconVariants } from "../motion/presets";
-import { Box, Cluster, Layer, LayerGrid, Stack } from "../primitives/Layout";
+import { Box, Cluster, LayerGrid, Stack } from "../primitives/Layout";
 import { ContentSpotAd } from "./ContentSpotAd";
-
-const SUBNAV_CATEGORIES = [
-  "New",
-  "Shoulder Bags",
-  "Totes",
-  "Crossbody Bags",
-  "Top Handles",
-] as const;
 
 export interface PlpListingProps {
   scrollRef: RefObject<HTMLDivElement | null>;
@@ -251,37 +243,14 @@ export function PlpListing({
         </Cluster>
       </Box>
 
-      {/* Page title & item count */}
-      <Box className="px-12 py-20 flex flex-row items-baseline justify-between gap-12 text-ink-primary">
+      {/* Search results headline */}
+      <Box className="px-12 py-20 border-b border-border-subtle text-ink-primary">
         <h1 className="text-title font-medium tracking-tight-title">
           {isCompareScenario
-            ? "Showing results for “Tabby”"
-            : "Showing results for “shoulder bags”"}
+            ? "24 results for Tabby"
+            : "150 results for shoulder bags"}
         </h1>
-        <span className="text-micro tracking-items uppercase tabular-nums shrink-0 whitespace-nowrap">
-          {isCompareScenario ? "24 ITEMS" : "172 ITEMS"}
-        </span>
       </Box>
-
-      {/* Sub navigation */}
-      <LayerGrid className="border-b border-border-subtle pl-12 pt-2 w-full overflow-hidden">
-        <Layer
-          as="nav"
-          aria-label="Handbag categories"
-          className="flex flex-row items-center gap-24 pb-2 pr-36 overflow-x-auto no-scrollbar min-w-0 w-full"
-        >
-          {SUBNAV_CATEGORIES.map((category) => (
-            <button
-              key={category}
-              type="button"
-              className="min-h-36 flex items-center text-caption font-medium text-ink-primary whitespace-nowrap shrink-0 press-scale"
-            >
-              {category}
-            </button>
-          ))}
-        </Layer>
-        <Layer className="self-center justify-self-end w-60 h-36 subnav-fade-right pointer-events-none" />
-      </LayerGrid>
 
       {/* Sticky filter bar — Safari 26 toolbar sampling: keep sticky host transparent and put fill/blur on absolute child */}
       <Cluster className="sticky top-0 z-10 bg-transparent px-12 py-6 justify-start">
