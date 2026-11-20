@@ -108,7 +108,6 @@ function TypingIndicatorPill() {
 
 export function ChatThreadView({
   turns,
-  steadyStage = false,
   sheetOpenStagger = false,
   bagIdsInCart = [],
   onSelectOption,
@@ -419,11 +418,9 @@ export function ChatThreadView({
   return (
     <LayerGrid
       className={clsx(
-        "w-full",
+        "w-full min-w-0",
         isCompactPreAnswer
-          ? steadyStage
-            ? "min-h-340 pb-8 overflow-visible"
-            : "pb-8 overflow-visible"
+          ? "pb-8 overflow-visible"
           : "h-full min-h-0 grid-rows-1 overflow-hidden",
       )}
     >
@@ -431,7 +428,7 @@ export function ChatThreadView({
         ref={scrollRef}
         onScroll={syncScrollMetrics}
         className={clsx(
-          "stack-cell w-full px-12 pt-6",
+          "stack-cell w-full min-w-0 px-12 pt-6",
           isCompactPreAnswer
             ? "pb-14 overflow-visible"
             : clsx(
@@ -440,7 +437,7 @@ export function ChatThreadView({
               ),
         )}
       >
-        <div ref={contentRef} className="flex flex-col gap-20 w-full">
+        <div ref={contentRef} className="flex flex-col gap-20 w-full min-w-0">
           {turns.map((turn, turnIdx) => {
             if (turn.kind === "compare") {
               return (
@@ -453,11 +450,12 @@ export function ChatThreadView({
                       turnElementsRef.current.delete(turn.id);
                     }
                   }}
-                  className="w-full"
+                  className="w-full min-w-0"
                 >
                   <CompareTurnItem
                     turn={turn}
                     sheetOpenStagger={sheetOpenStagger && turnIdx === 0}
+                    bagIdsInCart={bagIdsInCart}
                     registerChoiceGroupRef={registerChoiceGroupRef}
                     onRevealConfirmChoices={handleRevealConfirmChoices}
                     onOpenPicker={onOpenComparePicker}
@@ -466,6 +464,8 @@ export function ChatThreadView({
                     onConfirmSomethingElse={onConfirmCompareSomethingElse}
                     onCompareFeatures={onCompareFeatures}
                     onFollowUpSomethingElse={onFollowUpCompareSomethingElse}
+                    onToggleBagItem={onToggleBagItem}
+                    onViewBagDetails={onViewBagDetails}
                     onFeedback={onFeedback}
                   />
                 </div>
@@ -483,7 +483,7 @@ export function ChatThreadView({
                       turnElementsRef.current.delete(turn.id);
                     }
                   }}
-                  className="w-full"
+                  className="w-full min-w-0"
                 >
                   <OutfitTurnItem
                     turn={turn}
@@ -510,7 +510,7 @@ export function ChatThreadView({
                     turnElementsRef.current.delete(turn.id);
                   }
                 }}
-                className="flex flex-col gap-16 w-full"
+                className="flex flex-col gap-16 w-full min-w-0"
               >
                 {turn.showUserBubble && (
                   <motion.div
@@ -606,11 +606,11 @@ export function ChatThreadView({
                       initial={answerAlreadySeen ? false : "hidden"}
                       animate="visible"
                       exit="exit"
-                      className="flex flex-col gap-14 w-full items-start"
+                      className="flex flex-col gap-14 w-full min-w-0 items-start"
                     >
                       <motion.div
                         variants={blurScaleVariants}
-                        className="flex flex-col gap-5 items-start"
+                        className="flex flex-col gap-5 items-start max-w-full min-w-0"
                       >
                         <span className="text-micro text-ink-inverse">
                           Coach AI
@@ -630,7 +630,7 @@ export function ChatThreadView({
                       {turn.reply.bags && turn.reply.bags.length > 0 && (
                         <motion.div
                           variants={staggerCardsVariants}
-                          className="flex flex-row gap-8 w-full overflow-x-auto no-scrollbar py-2"
+                          className="flex flex-row gap-8 w-full min-w-0 overflow-x-auto no-scrollbar py-2"
                         >
                           {turn.reply.bags.map((bag) => (
                             <motion.button
@@ -674,7 +674,7 @@ export function ChatThreadView({
 
                       <motion.div
                         variants={blurScaleVariants}
-                        className="flex flex-col gap-12 items-start"
+                        className="flex flex-col gap-12 items-start max-w-full min-w-0"
                       >
                         {turn.reply.followUpNote && (
                           <Box className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble text-caption text-ink tracking-xs text-pretty">

@@ -73,7 +73,7 @@ export function ContentSpotAd({
               help you find exactly what you need
             </h2>
 
-            <LayerGrid className="w-180 h-250 bg-surface-portrait overflow-hidden image-outline">
+            <LayerGrid className="w-180 max-w-full h-250 bg-surface-portrait overflow-hidden image-outline">
               <img
                 src="/assets/figma/ad-swoop.svg"
                 alt=""
@@ -120,10 +120,10 @@ export function ContentSpotAd({
               >
                 <Box
                   className={clsx(
-                    "self-end mr-29 mt-157 bg-surface p-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp shadow-bubble",
+                    "self-end ml-16 mr-20 mt-157 bg-surface p-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp shadow-bubble",
                     mode === "compare"
                       ? "max-w-196 flex flex-row items-center gap-6"
-                      : "w-181",
+                      : "w-181 max-w-full",
                   )}
                 >
                   {mode === "compare" && (
@@ -142,17 +142,17 @@ export function ContentSpotAd({
 
                 <Stack
                   className={clsx(
-                    "self-start mt-40 items-start gap-5",
-                    mode === "general" ? "ml-70" : "ml-40"
+                    "self-start mr-16 mt-40 items-start gap-5 max-w-full min-w-0",
+                    mode === "general" ? "ml-56" : "ml-32"
                   )}
                 >
                   <span className="text-micro text-ink-inverse">Coach AI</span>
 
-                  <Box className="bg-surface p-8 rounded-bubble shadow-bubble">
+                  <Box className="max-w-full bg-surface p-8 rounded-bubble shadow-bubble">
                     <p
                       className={clsx(
-                        "text-caption text-ink",
-                        mode === "general" ? "whitespace-nowrap" : "w-196"
+                        "text-caption text-ink m-0",
+                        mode === "general" ? "whitespace-nowrap" : "max-w-196"
                       )}
                     >
                       {assistantMessage}

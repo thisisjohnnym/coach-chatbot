@@ -1,3 +1,3 @@
 <svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="152" height="39.9991" viewBox="0 0 152 39.9991" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path id="outlet tab background" d="M6 34C6 37.5 3 39.9991 0 39.9991L152 39.9991C149 39.9991 146 37 146 34V6C146 2.68629 143.314 0 140 0H12C8.68629 0 6 2.68165 6 5.99536V34Z" fill="white"/>
+<path id="outlet tab background" opacity="0" d="M6 34C6 37.5 3 39.9991 0 39.9991L152 39.9991C149 39.9991 146 37 146 34V6C146 2.68629 143.314 0 140 0H12C8.68629 0 6 2.68165 6 5.99536V34Z" fill="white"/>
 </svg>

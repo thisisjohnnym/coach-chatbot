@@ -77,7 +77,7 @@ export function ClosedFloatingOverlay({
   return (
     <Box
       inert={!visible || undefined}
-      className="w-full flex flex-col justify-end pointer-events-none"
+      className="w-full min-w-0 flex flex-col justify-end pointer-events-none"
     >
       <AnimatePresence mode="wait" initial={false}>
         {visible ? (
@@ -93,11 +93,11 @@ export function ClosedFloatingOverlay({
                 : "exit"
             }
             transition={prefersReducedMotion ? { duration: 0 } : undefined}
-            className="stack-cell self-end z-20 pointer-events-none w-full pb-safe-overlay px-12 flex flex-col gap-10"
+            className="stack-cell self-end z-20 pointer-events-none w-full min-w-0 pb-safe-overlay px-12 flex flex-col gap-10"
           >
-            <Box className="flex flex-row items-end justify-between w-full">
+            <Box className="flex flex-row items-end justify-between gap-8 w-full min-w-0">
               {/* Left slot keeps FABs pinned right whether resume pill is shown, exiting, or hidden */}
-              <Box className="flex items-end">
+              <Box className="flex items-end min-w-0">
                 <AnimatePresence mode="wait">
                   {shouldRenderResumePill ? (
                     <motion.div
@@ -117,7 +117,7 @@ export function ClosedFloatingOverlay({
                           : "exit"
                       }
                       transition={prefersReducedMotion ? { duration: 0 } : undefined}
-                      className="stack-grid isolate pointer-events-none"
+                      className="stack-grid shrink-0 isolate pointer-events-none"
                     >
                       {/* Subtle directional stroke caustic cast into the pill's shadow footprint */}
                       <Layer
@@ -196,13 +196,13 @@ export function ClosedFloatingOverlay({
               </Stack>
             </Box>
 
-            <Box className="flex justify-center w-full">
+            <Box className="flex justify-center w-full min-w-0">
               <Cluster
                 as="nav"
                 aria-label="Entry scenario selector"
                 className={clsx(
                   visible ? "pointer-events-auto" : "pointer-events-none",
-                  "max-w-full overflow-x-auto no-scrollbar bg-surface-selector backdrop-blur-md border border-border-dock rounded-pill p-4 gap-4 shadow-fab",
+                  "min-w-0 max-w-full overflow-x-auto no-scrollbar bg-surface-selector backdrop-blur-md border border-border-dock rounded-pill p-4 gap-3 shadow-fab",
                 )}
               >
                 <button
@@ -210,7 +210,7 @@ export function ClosedFloatingOverlay({
                   aria-pressed={contentSpotMode === "general" && !contentSpotDismissed}
                   onClick={() => onSelectSpotMode("general")}
                   className={clsx(
-                    "h-32 px-11 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                    "h-32 px-9 shrink-0 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
                     contentSpotMode === "general" && !contentSpotDismissed
                       ? "bg-surface text-ink font-medium"
                       : "text-ink-inverse-soft hover:text-ink-inverse",
@@ -224,7 +224,7 @@ export function ClosedFloatingOverlay({
                   aria-pressed={contentSpotMode === "prompted" && !contentSpotDismissed}
                   onClick={() => onSelectSpotMode("prompted")}
                   className={clsx(
-                    "h-32 px-11 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                    "h-32 px-9 shrink-0 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
                     contentSpotMode === "prompted" && !contentSpotDismissed
                       ? "bg-surface text-ink font-medium"
                       : "text-ink-inverse-soft hover:text-ink-inverse",
@@ -238,7 +238,7 @@ export function ClosedFloatingOverlay({
                   aria-pressed={contentSpotMode === "compare" && !contentSpotDismissed}
                   onClick={() => onSelectSpotMode("compare")}
                   className={clsx(
-                    "h-32 px-11 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
+                    "h-32 px-9 shrink-0 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none",
                     contentSpotMode === "compare" && !contentSpotDismissed
                       ? "bg-surface text-ink font-medium"
                       : "text-ink-inverse-soft hover:text-ink-inverse",

@@ -139,7 +139,7 @@ export function OutfitTurnItem({
             className="self-start flex flex-col gap-8 items-start"
           >
             <span className="text-micro text-ink-inverse">Coach AI</span>
-            <Box className="w-212 bg-surface p-8 rounded-bubble shadow-bubble text-caption text-ink tracking-xs">
+            <Box className="w-212 max-w-full bg-surface p-8 rounded-bubble shadow-bubble text-caption text-ink tracking-xs">
               Loading tools
             </Box>
             <Box
@@ -185,7 +185,7 @@ export function OutfitTurnItem({
               >
                 <motion.div
                   variants={compareSlotItemVariants}
-                  className="w-176 h-236 shrink-0 stack-grid"
+                  className="w-176 max-w-full min-h-236 shrink-0 stack-grid"
                 >
                   <AnimatePresence initial={false}>
                     {selfiePicked ? (
@@ -195,16 +195,16 @@ export function OutfitTurnItem({
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="stack-cell w-176 h-236 bg-surface rounded-slot overflow-hidden flex flex-col text-left shadow-bubble"
+                        className="stack-cell w-full bg-surface rounded-slot overflow-hidden flex flex-col text-left shadow-bubble"
                       >
-                        <LayerGrid className="w-176 h-184 bg-surface-portrait overflow-hidden shrink-0 image-outline">
+                        <LayerGrid className="w-full h-184 bg-surface-portrait overflow-hidden shrink-0 image-outline">
                           <img
                             src={OUTFIT_SELFIE_PREVIEW.image}
                             alt="Selected outfit selfie"
-                            className="stack-cell w-176 h-184 object-cover object-top"
+                            className="stack-cell w-full h-184 object-cover object-top"
                           />
                         </LayerGrid>
-                        <Stack className="px-10 py-8 gap-2 bg-surface h-52 w-full justify-center">
+                        <Stack className="px-10 py-8 gap-2 bg-surface min-h-52 w-full min-w-0 justify-center">
                           <Cluster className="gap-4">
                             <img
                               src="/assets/figma/icon-check-black.svg"
@@ -231,7 +231,7 @@ export function OutfitTurnItem({
                         animate="visible"
                         exit="exit"
                         onClick={() => onPickSelfie(turn.id)}
-                        className="stack-cell w-176 h-236 rounded-slot border border-dashed border-border-glass bg-surface-tile/40 hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
+                        className="stack-cell w-full min-h-236 rounded-slot border border-dashed border-border-glass bg-surface-tile/40 hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
                       >
                         <span className="w-36 h-36 rounded-pill bg-surface flex items-center justify-center shadow-bubble">
                           <img
@@ -272,11 +272,11 @@ export function OutfitTurnItem({
                     initial={matchedAlreadySeen ? false : "hidden"}
                     animate="visible"
                     exit="exit"
-                    className="flex flex-col gap-14 w-full items-start overflow-visible"
+                    className="flex flex-col gap-14 w-full min-w-0 items-start overflow-visible"
                   >
                     <motion.div
                       variants={blurScaleVariants}
-                      className="flex flex-col gap-5 items-start"
+                      className="flex flex-col gap-5 items-start max-w-full min-w-0"
                     >
                       <span className="text-micro text-ink-inverse">
                         Coach AI
@@ -299,7 +299,7 @@ export function OutfitTurnItem({
                       OUTFIT_MATCH_REPLY.bags.length > 0 && (
                         <motion.div
                           variants={staggerCardsVariants}
-                          className="flex flex-row gap-8 w-full overflow-x-auto no-scrollbar py-2"
+                          className="flex flex-row gap-8 w-full min-w-0 overflow-x-auto no-scrollbar py-2"
                         >
                           {OUTFIT_MATCH_REPLY.bags.map((bag) => (
                             <motion.button
@@ -343,7 +343,7 @@ export function OutfitTurnItem({
 
                     <motion.div
                       variants={blurScaleVariants}
-                      className="flex flex-col gap-12 items-start"
+                      className="flex flex-col gap-12 items-start max-w-full min-w-0"
                     >
                       {OUTFIT_MATCH_REPLY.followUpNote && (
                         <Box className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble text-caption text-ink tracking-xs text-pretty">

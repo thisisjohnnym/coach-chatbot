@@ -161,7 +161,7 @@ export function ChatInputDock({
         </Cluster>
       </Box>
 
-      <Box className="text-micro text-ink-subtle text-center tracking-xs leading-none">
+      <Box className="text-micro text-ink-subtle text-center tracking-xs leading-tight">
         You’re asking Coach’s AI assistant. It can make mistakes
       </Box>
     </Stack>

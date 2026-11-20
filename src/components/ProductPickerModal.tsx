@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
-import { AnimatePresence, motion } from "motion/react";
-import { BAG_CATALOG, type BagProduct } from "../data/catalog";
+import { motion } from "motion/react";
+import {
+  BAG_CATALOG,
+  DEFAULT_RECENT_COMPARE_BAGS,
+  type BagProduct,
+} from "../data/catalog";
 import {
   TRANSITION_PICKER_CLOSE,
   TRANSITION_PICKER_OPEN,
@@ -9,74 +13,79 @@ import {
   pickerCardVariants,
   pickerGridVariants,
 } from "../motion/presets";
-import { Box, Layer, LayerGrid, Stack } from "../primitives/Layout";
+import { Box, Cluster, Layer, LayerGrid, Stack } from "../primitives/Layout";
 
 export interface ProductPickerModalProps {
-  slot: "A" | "B";
+  slot?: "A" | "B";
   excludeBagId?: string;
   recentBags?: BagProduct[];
   onPickBag: (bag: BagProduct) => void;
   onClose: () => void;
 }
 
-type FilterKey = "recent" | "top" | "trending" | "foryou" | "all";
+type PickerBadge = "Picked" | "Viewed" | "Recommended";
 
-const FILTER_CHIPS: Array<{ id: FilterKey; label: string }> = [
-  { id: "recent", label: "Recent search" },
-  { id: "top", label: "Top sellers" },
-  { id: "trending", label: "Trending" },
-  { id: "foryou", label: "For You" },
-  { id: "all", label: "All" },
-];
+interface PickerGridItem {
+  bag: BagProduct;
+  badge: PickerBadge;
+}
 
-function getOrderedBags(
-  filter: FilterKey,
-  recentBags?: BagProduct[],
-): BagProduct[] {
-  if (filter === "all") {
-    return [...BAG_CATALOG, BAG_CATALOG[2], BAG_CATALOG[0], BAG_CATALOG[4]];
+const TARGET_GRID_COUNT = 6;
+
+function getCuratedPickerItems(
+  excludeBagId?: string,
+  recentBags: BagProduct[] = DEFAULT_RECENT_COMPARE_BAGS,
+): PickerGridItem[] {
+  const items: PickerGridItem[] = [];
+  const seenIds = new Set<string>();
+  const seenImages = new Set<string>();
+
+  const addItem = (bag: BagProduct, badge: PickerBadge) => {
+    items.push({ bag, badge });
+    seenIds.add(bag.id);
+    seenImages.add(bag.image);
+  };
+
+  if (excludeBagId) {
+    const pickedBag = BAG_CATALOG.find((bag) => bag.id === excludeBagId);
+    if (pickedBag) {
+      addItem(pickedBag, "Picked");
+    }
   }
 
-  if (filter === "recent" && recentBags && recentBags.length > 0) {
-    const mostRecentFirst = [...recentBags].reverse();
-    const recentIds = new Set(mostRecentFirst.map((bag) => bag.id));
-    const restRecent = BAG_CATALOG.filter(
-      (bag) => bag.category === "recent" && !recentIds.has(bag.id),
-    );
-    const remaining = BAG_CATALOG.filter(
-      (bag) => bag.category !== "recent" && !recentIds.has(bag.id),
-    );
-    return [
-      ...mostRecentFirst,
-      ...restRecent,
-      ...remaining,
-      BAG_CATALOG[0],
-      BAG_CATALOG[4],
-    ];
+  const mostRecentFirst = [...recentBags].reverse();
+  for (const bag of mostRecentFirst) {
+    if (!seenIds.has(bag.id) && items.length < TARGET_GRID_COUNT) {
+      addItem(bag, "Viewed");
+    }
   }
 
-  const primary = BAG_CATALOG.filter((bag) => bag.category === filter);
-  const rest = BAG_CATALOG.filter((bag) => bag.category !== filter);
-  const orderedSix = [...primary, ...rest];
-
-  if (filter === "recent") {
-    return [...orderedSix, BAG_CATALOG[0], BAG_CATALOG[4], BAG_CATALOG[1]];
+  for (const bag of BAG_CATALOG) {
+    if (items.length >= TARGET_GRID_COUNT) break;
+    if (!seenIds.has(bag.id) && !seenImages.has(bag.image)) {
+      addItem(bag, "Recommended");
+    }
   }
 
-  return orderedSix;
+  for (const bag of BAG_CATALOG) {
+    if (items.length >= TARGET_GRID_COUNT) break;
+    if (!seenIds.has(bag.id)) {
+      addItem(bag, "Recommended");
+    }
+  }
+
+  return items;
 }
 
 export function ProductPickerModal({
-  slot,
   excludeBagId,
   recentBags,
   onPickBag,
   onClose,
 }: ProductPickerModalProps) {
-  const [activeFilter, setActiveFilter] = useState<FilterKey>("recent");
   const gridScrollRef = useRef<HTMLDivElement | null>(null);
   const [scrolledTop, setScrolledTop] = useState(0);
-  const [canScrollDown, setCanScrollDown] = useState(true);
+  const [canScrollDown, setCanScrollDown] = useState(false);
 
   const syncScrollMetrics = useCallback(() => {
     const el = gridScrollRef.current;
@@ -97,6 +106,11 @@ export function ProductPickerModal({
     [syncScrollMetrics],
   );
 
+  const curatedItems = useMemo(
+    () => getCuratedPickerItems(excludeBagId, recentBags),
+    [excludeBagId, recentBags],
+  );
+
   useEffect(() => {
     const el = gridScrollRef.current;
     if (!el) return;
@@ -109,7 +123,7 @@ export function ProductPickerModal({
     return () => {
       observer.disconnect();
     };
-  }, [activeFilter, syncScrollMetrics]);
+  }, [curatedItems, syncScrollMetrics]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -122,11 +136,6 @@ export function ProductPickerModal({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
-
-  const displayedBags = useMemo(
-    () => getOrderedBags(activeFilter, recentBags),
-    [activeFilter, recentBags],
-  );
 
   const hasTopEdge = scrolledTop > 8;
   const hasBottomEdge = canScrollDown;
@@ -145,7 +154,7 @@ export function ProductPickerModal({
       animate={{ opacity: 1, transition: TRANSITION_PICKER_SCRIM_OPEN }}
       exit={{ opacity: 0, pointerEvents: "none", transition: TRANSITION_PICKER_CLOSE }}
       onClick={onClose}
-      className="stack-cell w-full h-full bg-surface-modal-scrim backdrop-blur-subtle px-16 py-12 flex items-center justify-center"
+      className="stack-cell w-full h-full min-h-0 bg-surface-modal-scrim backdrop-blur-subtle px-16 pt-16 pb-safe-modal flex items-center justify-center overflow-hidden"
     >
       <motion.div
         role="dialog"
@@ -167,117 +176,83 @@ export function ProductPickerModal({
           transition: TRANSITION_PICKER_CLOSE,
         }}
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-390 max-h-full bg-surface rounded-tile overflow-hidden flex flex-col shadow-fab"
+        className="w-full max-w-390 max-h-modal min-w-0 min-h-0 bg-surface rounded-tile overflow-hidden flex flex-col shadow-fab"
       >
-        <Stack className="pt-18 pb-10 px-12 gap-8 bg-surface shrink-0">
-          <Box className="flex flex-row items-start justify-between">
-            <Stack className="gap-2">
-              <span className="text-body text-ink tabular-nums">
-                {slot === "A" ? "1/2" : "2/2"}
-              </span>
-              <h3
-                id="product-picker-title"
-                className="text-heading text-ink tracking-sm font-normal m-0"
-              >
-                Choosing product {slot}
-              </h3>
-            </Stack>
+        <Cluster className="pt-14 pb-10 px-14 gap-8 justify-between bg-surface shrink-0 min-w-0">
+          <h3
+            id="product-picker-title"
+            className="text-title text-ink tracking-tight-title font-normal text-balance m-0 min-w-0"
+          >
+            Select a product to compare
+          </h3>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-36 h-36 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none hover:bg-surface-muted"
-            >
-              <img
-                src="/assets/figma/icon-close-modal.svg"
-                alt="Close product picker"
-                width={24}
-                height={24}
-                className="w-24 h-24"
-              />
-            </button>
-          </Box>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-40 h-40 -mr-2 shrink-0 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none hover:bg-surface-muted"
+          >
+            <img
+              src="/assets/figma/icon-close-modal.svg"
+              alt="Close product picker"
+              width={24}
+              height={24}
+              className="w-24 h-24"
+            />
+          </button>
+        </Cluster>
 
-          <Stack className="gap-6">
-            <span className="text-caption text-ink tracking-xs">
-              Show products from:
-            </span>
-            <Box className="flex flex-row gap-5 overflow-x-auto no-scrollbar">
-              {FILTER_CHIPS.map((chip) => {
-                const isActive = activeFilter === chip.id;
-                return (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    aria-pressed={isActive}
-                    onClick={() => setActiveFilter(chip.id)}
-                    className={clsx(
-                      "h-36 px-12 rounded-pill text-caption tracking-xs whitespace-nowrap press-scale motion-reduce:transition-none flex items-center justify-center",
-                      isActive
-                        ? "bg-ink text-ink-inverse"
-                        : "bg-surface text-ink border border-border-chip hover:bg-surface-muted",
-                    )}
-                  >
-                    {chip.label}
-                  </button>
-                );
-              })}
-            </Box>
-          </Stack>
-        </Stack>
-
-        <LayerGrid className="min-h-0 overflow-hidden">
-          <AnimatePresence>
-            <motion.div
-              key={activeFilter}
-              ref={attachGridRef}
-              onScroll={syncScrollMetrics}
-              variants={pickerGridVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className={clsx(
-                "stack-cell grid grid-cols-3 gap-8 px-10 pb-16 pt-4 overflow-y-auto max-h-460",
-                scrollMaskClass,
-              )}
-            >
-              {displayedBags.map((bag, idx) => {
-                const isExcluded = bag.id === excludeBagId;
-                return (
-                  <motion.button
-                    key={`${bag.id}-${idx}`}
-                    type="button"
-                    variants={pickerCardVariants}
-                    disabled={isExcluded}
-                    onClick={() => {
-                      if (!isExcluded) {
-                        onPickBag(bag);
-                      }
-                    }}
-                    className={clsx(
-                      "min-w-0 bg-surface rounded-slot overflow-hidden flex flex-col text-left",
-                      isExcluded
-                        ? "cursor-not-allowed"
-                        : "press-scale motion-reduce:transition-none",
-                    )}
-                  >
-                    <Box
-                      className={clsx(
-                        "w-full flex flex-col",
-                        isExcluded && "opacity-45",
-                      )}
-                    >
-                      <LayerGrid className="w-full h-148 bg-surface-muted overflow-hidden">
-                        <img
-                          src={bag.image}
-                          alt={bag.name}
-                          className="stack-cell w-full h-148 object-cover"
-                        />
-                        {isExcluded && (
-                          <Layer className="self-start justify-self-start m-4 px-6 py-2 rounded-slot bg-ink text-ink-inverse text-micro">
-                            Picked
-                          </Layer>
+        <LayerGrid className="w-full flex-1 min-h-0 grid-rows-1 overflow-hidden">
+          <motion.div
+            ref={attachGridRef}
+            onScroll={syncScrollMetrics}
+            variants={pickerGridVariants}
+            initial="hidden"
+            animate="visible"
+            className={clsx(
+              "stack-cell w-full h-full min-h-0 grid grid-cols-3 auto-rows-max gap-8 px-10 pb-14 pt-4 overflow-y-auto sheet-scrollbar",
+              scrollMaskClass,
+            )}
+          >
+            {curatedItems.map(({ bag, badge }) => {
+              const isPicked = badge === "Picked";
+              return (
+                <motion.button
+                  key={bag.id}
+                  type="button"
+                  variants={pickerCardVariants}
+                  disabled={isPicked}
+                  onClick={() => {
+                    if (!isPicked) {
+                      onPickBag(bag);
+                    }
+                  }}
+                  className={clsx(
+                    "min-w-0 bg-surface rounded-card overflow-hidden flex flex-col text-left border",
+                    isPicked
+                      ? "border-border-strong ring-1 ring-border-strong cursor-default"
+                      : "border-transparent press-scale motion-reduce:transition-none",
+                  )}
+                >
+                  <Box className="w-full min-w-0 flex flex-col">
+                    <LayerGrid className="w-full aspect-picker-card bg-surface-muted overflow-hidden shrink-0 image-outline">
+                      <img
+                        src={bag.image}
+                        alt={bag.name}
+                        className="stack-cell w-full h-full object-cover"
+                      />
+                      <Layer
+                        className={clsx(
+                          "self-start justify-self-start m-4 max-w-full px-6 py-2 rounded-pill font-roman text-micro tracking-xs truncate pointer-events-none",
+                          badge === "Picked" && "bg-ink text-ink-inverse",
+                          badge === "Viewed" &&
+                            "bg-surface/95 backdrop-blur-subtle text-ink border border-border-chip shadow-bubble",
+                          badge === "Recommended" &&
+                            "bg-surface/90 backdrop-blur-subtle text-ink-charcoal border border-border-subtle",
                         )}
+                      >
+                        {badge}
+                      </Layer>
+                      {!isPicked && (
                         <img
                           src="/assets/figma/card-plus.svg"
                           alt=""
@@ -285,26 +260,26 @@ export function ProductPickerModal({
                           height={20}
                           className="stack-cell self-end justify-self-end w-20 h-20 m-2"
                         />
-                      </LayerGrid>
-                      <img
-                        src="/assets/figma/card-slider-bar.svg"
-                        alt=""
-                        className="w-full h-2 object-cover"
-                      />
-                      <Stack className="pt-8 pb-4 px-4 gap-2 text-left w-full">
-                        <p className="text-caption text-ink truncate m-0">
-                          {bag.name}
-                        </p>
-                        <p className="text-caption text-ink tabular-nums m-0">
-                          {bag.priceFormatted}
-                        </p>
-                      </Stack>
-                    </Box>
-                  </motion.button>
-                );
-              })}
-            </motion.div>
-          </AnimatePresence>
+                      )}
+                    </LayerGrid>
+                    <img
+                      src="/assets/figma/card-slider-bar.svg"
+                      alt=""
+                      className="w-full h-2 object-cover shrink-0"
+                    />
+                    <Stack className="pt-6 pb-5 px-5 gap-2 text-left w-full min-w-0 shrink-0">
+                      <p className="text-caption text-ink truncate m-0">
+                        {bag.name}
+                      </p>
+                      <p className="text-caption text-ink tabular-nums m-0">
+                        {bag.priceFormatted}
+                      </p>
+                    </Stack>
+                  </Box>
+                </motion.button>
+              );
+            })}
+          </motion.div>
         </LayerGrid>
       </motion.div>
     </motion.div>

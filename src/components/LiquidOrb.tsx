@@ -89,7 +89,7 @@ export function LiquidOrb({
       ref={orbHostRef}
       data-bloom-key={bloomKey}
       aria-hidden="true"
-      className="w-full py-6 flex items-center justify-center pointer-events-none overflow-visible"
+      className="w-full py-6 flex items-center justify-center pointer-events-none overflow-visible orb-compact-scale"
     >
       <motion.div
         initial={false}

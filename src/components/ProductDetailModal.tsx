@@ -55,7 +55,7 @@ export function ProductDetailModal({
         transition: TRANSITION_PICKER_CLOSE,
       }}
       onClick={onClose}
-      className="stack-cell pointer-events-auto w-full h-full bg-surface-modal-scrim backdrop-blur-subtle px-16 py-12 flex items-center justify-center"
+      className="stack-cell pointer-events-auto w-full h-full min-h-0 bg-surface-modal-scrim backdrop-blur-subtle px-16 pt-safe-modal pb-safe-modal flex items-center justify-center overflow-hidden"
     >
       <motion.div
         role="dialog"
@@ -77,17 +77,17 @@ export function ProductDetailModal({
           transition: TRANSITION_PICKER_CLOSE,
         }}
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-390 max-h-full bg-surface rounded-tile overflow-hidden flex flex-col shadow-fab"
+        className="w-full max-w-390 max-h-modal min-w-0 min-h-0 bg-surface rounded-tile overflow-hidden flex flex-col shadow-fab"
       >
         {/* Top bar */}
-        <Cluster className="px-14 pt-12 pb-8 justify-between bg-surface shrink-0">
-          <span className="text-micro uppercase tracking-items text-ink-muted">
+        <Cluster className="px-14 pt-12 pb-8 justify-between gap-8 bg-surface shrink-0 min-w-0">
+          <span className="text-micro uppercase tracking-items text-ink-muted truncate">
             Product Details
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="w-36 h-36 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none hover:bg-surface-muted"
+            className="w-40 h-40 -mr-2 shrink-0 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none hover:bg-surface-muted"
           >
             <img
               src="/assets/figma/icon-close-modal.svg"
@@ -100,12 +100,12 @@ export function ProductDetailModal({
         </Cluster>
 
         {/* Scrollable product body */}
-        <div className="overflow-y-auto sheet-scrollbar min-h-0 flex flex-col">
-          <LayerGrid className="w-full h-204 bg-surface-muted overflow-hidden shrink-0">
+        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto sheet-scrollbar flex flex-col">
+          <LayerGrid className="w-full aspect-detail-hero max-h-204 bg-surface-muted overflow-hidden shrink-0">
             <img
               src={bag.image}
               alt={bag.name}
-              className="stack-cell w-full h-204 object-contain"
+              className="stack-cell w-full h-full object-contain"
             />
           </LayerGrid>
 

@@ -14,6 +14,7 @@ import {
   compareSlotItemVariants,
   compareSlotRowVariants,
   compareSlotSwapVariants,
+  contextualIconVariants,
   staggerAnswerSequenceVariants,
   staggerCardsVariants,
   upwardCraftedBubbleVariants,
@@ -49,6 +50,7 @@ export interface CompareThreadTurn {
 export interface CompareTurnItemProps {
   turn: CompareThreadTurn;
   sheetOpenStagger?: boolean;
+  bagIdsInCart?: string[];
   registerChoiceGroupRef: (key: string, node: HTMLDivElement | null) => void;
   onRevealConfirmChoices: (turnId: string) => void;
   onOpenPicker: (turnId: string, slot: "A" | "B") => void;
@@ -57,6 +59,8 @@ export interface CompareTurnItemProps {
   onConfirmSomethingElse: (turnId: string) => void;
   onCompareFeatures: (turnId: string) => void;
   onFollowUpSomethingElse: (turnId: string) => void;
+  onToggleBagItem?: (bag: BagProduct) => void;
+  onViewBagDetails?: (bag: BagProduct) => void;
   onFeedback: (turnId: string, vote: "up" | "down") => void;
 }
 
@@ -73,6 +77,7 @@ export function resetSeenCompareTurnIds() {
 export function CompareTurnItem({
   turn,
   sheetOpenStagger = false,
+  bagIdsInCart = [],
   registerChoiceGroupRef,
   onRevealConfirmChoices,
   onOpenPicker,
@@ -81,6 +86,8 @@ export function CompareTurnItem({
   onConfirmSomethingElse,
   onCompareFeatures,
   onFollowUpSomethingElse,
+  onToggleBagItem,
+  onViewBagDetails,
   onFeedback,
 }: CompareTurnItemProps) {
   const { slotA, slotB, stage, mode } = turn;
@@ -134,7 +141,7 @@ export function CompareTurnItem({
     <motion.div
       key={slot}
       variants={compareSlotItemVariants}
-      className="w-151 h-270 shrink-0 stack-grid"
+      className="flex-1 min-w-0 max-w-156 stack-grid"
     >
       <AnimatePresence initial={false}>
         {bag ? (
@@ -146,13 +153,13 @@ export function CompareTurnItem({
             animate="visible"
             exit="exit"
             onClick={() => onOpenPicker(turn.id, slot)}
-            className="stack-cell w-151 h-270 bg-surface rounded-slot overflow-hidden flex flex-col text-left press-scale motion-reduce:transition-none shadow-bubble"
+            className="stack-cell w-full h-full bg-surface rounded-slot overflow-hidden flex flex-col text-left press-scale motion-reduce:transition-none shadow-bubble"
           >
-            <LayerGrid className="w-151 h-207 bg-surface-muted overflow-hidden shrink-0">
+            <LayerGrid className="w-full aspect-slot-card bg-surface-muted overflow-hidden shrink-0">
               <img
                 src={bag.image}
                 alt={bag.name}
-                className="stack-cell w-151 h-207 object-cover"
+                className="stack-cell w-full h-full object-cover"
               />
               <img
                 src="/assets/figma/card-plus.svg"
@@ -167,7 +174,7 @@ export function CompareTurnItem({
               alt=""
               className="w-full h-2 object-cover shrink-0"
             />
-            <Stack className="p-10 gap-4 bg-surface h-61 w-full">
+            <Stack className="p-10 gap-4 bg-surface min-h-61 w-full min-w-0 shrink-0">
               <p className="text-caption text-ink truncate m-0">{bag.name}</p>
               <p className="text-caption text-ink tabular-nums m-0">
                 {bag.priceFormatted}
@@ -183,9 +190,9 @@ export function CompareTurnItem({
             animate="visible"
             exit="exit"
             onClick={() => onOpenPicker(turn.id, slot)}
-            className="stack-cell w-151 h-270 rounded-slot border border-dashed border-border-glass bg-surface-tile/40 hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-18 press-scale motion-reduce:transition-none"
+            className="stack-cell w-full h-full min-h-228 p-10 rounded-slot border border-dashed border-border-glass bg-surface-tile/40 hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
           >
-            <span className="w-32 h-32 rounded-pill bg-surface flex items-center justify-center shadow-bubble">
+            <span className="w-32 h-32 rounded-pill bg-surface flex items-center justify-center shadow-bubble shrink-0">
               <img
                 src="/assets/figma/icon-add-slot.svg"
                 alt=""
@@ -330,7 +337,7 @@ export function CompareTurnItem({
             className="self-start flex flex-col gap-8 items-start"
           >
             <span className="text-micro text-ink-inverse">Coach AI</span>
-            <Box className="w-212 bg-surface p-8 rounded-bubble shadow-bubble text-caption text-ink tracking-xs">
+            <Box className="w-212 max-w-full bg-surface p-8 rounded-bubble shadow-bubble text-caption text-ink tracking-xs">
               Loading tools
             </Box>
             <Box
@@ -375,7 +382,7 @@ export function CompareTurnItem({
 
                 <motion.div
                   variants={compareSlotRowVariants}
-                  className="flex flex-row gap-20 justify-center w-full pt-4"
+                  className="flex flex-row gap-14 justify-center items-stretch w-full pt-4"
                 >
                   {renderSlot("A", slotA)}
                   {renderSlot("B", slotB)}
@@ -535,11 +542,11 @@ export function CompareTurnItem({
                             onClick={() => onOpenPicker(turn.id, slot)}
                             className="stack-cell w-full bg-surface rounded-slot overflow-hidden flex flex-col text-left press-scale motion-reduce:transition-none shadow-bubble"
                           >
-                            <LayerGrid className="w-full h-207 bg-surface-muted overflow-hidden">
+                            <LayerGrid className="w-full aspect-slot-card bg-surface-muted overflow-hidden shrink-0">
                               <img
                                 src={bag.image}
                                 alt={bag.name}
-                                className="stack-cell w-full h-207 object-cover"
+                                className="stack-cell w-full h-full object-cover"
                               />
                               <img
                                 src="/assets/figma/card-plus.svg"
@@ -552,9 +559,9 @@ export function CompareTurnItem({
                             <img
                               src="/assets/figma/card-slider-bar.svg"
                               alt=""
-                              className="w-full h-2 object-cover"
+                              className="w-full h-2 object-cover shrink-0"
                             />
-                            <Stack className="p-10 gap-4 bg-surface w-full">
+                            <Stack className="p-10 gap-4 bg-surface w-full min-w-0">
                               <p className="text-caption text-ink truncate m-0">
                                 {bag.name}
                               </p>
@@ -568,19 +575,16 @@ export function CompareTurnItem({
                     ))}
                   </motion.div>
 
-                  {/* 3. Cascading 6 Spec Rows */}
+                  {/* 3. Cascading 6 Spec Rows + Side-by-Side Conversion Footer */}
                   <motion.div
                     variants={staggerCardsVariants}
                     className="flex flex-col w-full text-ink-inverse"
                   >
-                    {specRows.map((row, idx) => (
+                    {specRows.map((row) => (
                       <motion.div
                         key={row.label}
                         variants={blurScaleVariants}
-                        className={clsx(
-                          "py-10 flex flex-row gap-15 w-full",
-                          idx < 5 && "border-b border-border-divider",
-                        )}
+                        className="py-10 flex flex-row gap-15 w-full border-b border-border-divider"
                       >
                         <Stack className="flex-1 min-w-0 gap-2">
                           <span className="text-body text-ink-inverse">
@@ -600,6 +604,117 @@ export function CompareTurnItem({
                         </Stack>
                       </motion.div>
                     ))}
+
+                    <motion.div
+                      variants={blurScaleVariants}
+                      className="pt-14 pb-2 flex flex-row gap-15 w-full"
+                    >
+                      {(
+                        [
+                          { slot: "A" as const, bag: slotA },
+                          { slot: "B" as const, bag: slotB },
+                        ]
+                      ).map(({ slot, bag }) => {
+                        const isInBag = bagIdsInCart.includes(bag.id);
+
+                        return (
+                          <LayerGrid key={slot} className="flex-1 min-w-0">
+                            <AnimatePresence initial={false}>
+                              <motion.div
+                                key={bag.id}
+                                variants={compareSlotSwapVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                className="stack-cell w-full flex flex-col gap-10"
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => onViewBagDetails?.(bag)}
+                                  className="w-full min-h-48 flex flex-row items-center gap-8 text-left press-scale motion-reduce:transition-none"
+                                >
+                                  <Box className="w-38 h-46 rounded-slot bg-surface-muted overflow-hidden image-outline shrink-0">
+                                    <img
+                                      src={bag.image}
+                                      alt={bag.name}
+                                      className="w-38 h-46 object-cover"
+                                    />
+                                  </Box>
+                                  <Stack className="min-w-0 flex-1 gap-2">
+                                    <span className="text-caption font-medium text-ink-inverse line-clamp-2 leading-tight text-pretty">
+                                      {bag.shortName}
+                                    </span>
+                                    <span className="text-caption text-ink-inverse-muted tabular-nums">
+                                      {bag.priceFormatted}
+                                    </span>
+                                  </Stack>
+                                </button>
+
+                                <Stack className="w-full gap-4">
+                                  <button
+                                    type="button"
+                                    aria-pressed={isInBag}
+                                    aria-label={
+                                      isInBag
+                                        ? `Remove ${bag.shortName} from bag`
+                                        : `Add ${bag.shortName} to bag`
+                                    }
+                                    onClick={() => onToggleBagItem?.(bag)}
+                                    className={clsx(
+                                      "w-full h-40 px-10 rounded-pill border flex flex-row items-center justify-center gap-6 text-caption font-medium tracking-xs whitespace-nowrap shadow-bubble press-scale motion-reduce:transition-none",
+                                      isInBag
+                                        ? "bg-ink text-ink-inverse border-border-glass"
+                                        : "bg-surface text-ink border-surface",
+                                    )}
+                                  >
+                                    <LayerGrid className="w-15 h-15 place-items-center shrink-0">
+                                      <AnimatePresence mode="wait" initial={false}>
+                                        {isInBag ? (
+                                          <motion.img
+                                            key="compare-added-check"
+                                            variants={contextualIconVariants}
+                                            initial="hidden"
+                                            animate="visible"
+                                            exit="exit"
+                                            src="/assets/figma/icon-check-white.svg"
+                                            alt=""
+                                            width={15}
+                                            height={15}
+                                            className="stack-cell w-15 h-15"
+                                          />
+                                        ) : (
+                                          <motion.img
+                                            key="compare-bag-icon"
+                                            variants={contextualIconVariants}
+                                            initial="hidden"
+                                            animate="visible"
+                                            exit="exit"
+                                            src="/assets/figma/icon-bag-white.svg"
+                                            alt=""
+                                            width={15}
+                                            height={15}
+                                            className="stack-cell w-15 h-15 invert"
+                                          />
+                                        )}
+                                      </AnimatePresence>
+                                    </LayerGrid>
+                                    <span>{isInBag ? "Added" : "Add to bag"}</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => onViewBagDetails?.(bag)}
+                                    className="w-full h-36 rounded-pill text-caption text-ink-inverse-soft hover:text-ink-inverse underline tracking-xs flex items-center justify-center press-scale motion-reduce:transition-none"
+                                  >
+                                    View details
+                                  </button>
+                                </Stack>
+                              </motion.div>
+                            </AnimatePresence>
+                          </LayerGrid>
+                        );
+                      })}
+                    </motion.div>
                   </motion.div>
 
                   {/* 4. Recommendation Card */}

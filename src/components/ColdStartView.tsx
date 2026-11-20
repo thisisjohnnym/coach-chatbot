@@ -31,7 +31,10 @@ export function ColdStartView({
   const prefersReducedMotion = useReducedMotion();
   const isExitingSelection = selectedStarterId !== null;
 
-  const renderCard = (action: StarterAction, rowHeightClass: "h-107" | "h-91") => {
+  const renderCard = (
+    action: StarterAction,
+    rowHeightClass: "cold-start-card-tall" | "cold-start-card-short",
+  ) => {
     const isSelected = selectedStarterId === action.id;
 
     return (
@@ -42,7 +45,7 @@ export function ColdStartView({
         aria-pressed={isSelected}
         onClick={() => onSelectStarter(action)}
         className={clsx(
-          "flex-1 min-w-0 p-13 rounded-tile border flex flex-col items-start justify-between text-left text-ink-inverse press-scale motion-reduce:transition-none",
+          "flex-1 min-w-0 p-12 rounded-tile border flex flex-col items-start justify-between gap-8 text-left text-ink-inverse press-scale motion-reduce:transition-none",
           rowHeightClass,
           isExitingSelection && "pointer-events-none",
           isSelected
@@ -57,7 +60,7 @@ export function ColdStartView({
           height={22}
           className="w-22 h-22 shrink-0"
         />
-        <span className="text-body tracking-xs text-balance">
+        <span className="text-body tracking-xs text-balance break-words">
           {action.label}
         </span>
       </motion.button>
@@ -65,7 +68,7 @@ export function ColdStartView({
   };
 
   return (
-    <Stack className="h-full justify-end pb-48 px-20 gap-10 w-full overflow-visible">
+    <Stack className="h-full min-h-0 justify-end cold-start-shell px-20 gap-8 w-full min-w-0 overflow-visible">
       <motion.div
         initial={false}
         animate={
@@ -108,7 +111,7 @@ export function ColdStartView({
                   transition: { duration: DURATION_EXIT, ease: EASE_PREMIUM },
                 }
           }
-          className="pt-2 pb-14 px-10 w-full text-center"
+          className="cold-start-heading px-10 w-full text-center"
         >
           <h2 className="text-heading text-ink-inverse tracking-sm font-normal text-balance m-0">
             How can I help?
@@ -132,7 +135,7 @@ export function ColdStartView({
               ? { duration: 0.17, delay: 0, ease: EASE_PREMIUM }
               : { duration: 0.34, delay: 0.19, ease: EASE_PREMIUM }
         }
-        className="w-full overflow-visible will-change-transform"
+        className="w-full min-w-0 overflow-visible will-change-transform"
       >
         <motion.div
           variants={{
@@ -150,13 +153,13 @@ export function ColdStartView({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="w-full overflow-visible"
+          className="w-full min-w-0 overflow-visible"
         >
-          <Box className="flex flex-row gap-10 w-full mb-10">
-            {ROW_ONE_ACTIONS.map((action) => renderCard(action, "h-107"))}
+          <Box className="flex flex-row gap-10 w-full mb-10 items-stretch">
+            {ROW_ONE_ACTIONS.map((action) => renderCard(action, "cold-start-card-tall"))}
           </Box>
-          <Box className="flex flex-row gap-10 w-full">
-            {ROW_TWO_ACTIONS.map((action) => renderCard(action, "h-91"))}
+          <Box className="flex flex-row gap-10 w-full items-stretch">
+            {ROW_TWO_ACTIONS.map((action) => renderCard(action, "cold-start-card-short"))}
           </Box>
         </motion.div>
       </motion.div>

@@ -59,6 +59,14 @@ export function App() {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const isTypingFocusedRef = useRef(false);
   const closingSheetRef = useRef(false);
+  const restingHeightRef = useRef(
+    typeof window !== "undefined" ? window.innerHeight : 930
+  );
+  const lastViewportWidthRef = useRef(
+    typeof window !== "undefined" ? window.innerWidth : 430
+  );
+  const wasKbOpenRef = useRef(false);
+  const focusedAtRef = useRef(0);
   const timersRef = useRef<number[]>([]);
   const voiceTimersRef = useRef<number[]>([]);
   const voiceIdxRef = useRef(0);
@@ -97,13 +105,53 @@ export function App() {
     const syncViewport = () => {
       const vv = window.visualViewport;
       const scale = vv?.scale ?? 1;
-      const mainHeight = mainRef.current?.clientHeight || window.innerHeight;
+      const rect = mainRef.current?.getBoundingClientRect();
+      const mainHeight = rect ? Math.round(rect.height) : window.innerHeight;
+      const mainBottom = rect ? rect.bottom : window.innerHeight;
+      const currentWidth = window.innerWidth;
+
+      if (Math.abs(currentWidth - lastViewportWidthRef.current) > 24) {
+        lastViewportWidthRef.current = currentWidth;
+        restingHeightRef.current = mainHeight;
+        wasKbOpenRef.current = false;
+      } else if (
+        mainHeight > restingHeightRef.current ||
+        (!isTypingFocusedRef.current && !wasKbOpenRef.current)
+      ) {
+        restingHeightRef.current = mainHeight;
+      }
+
       const occludedBottom =
         vv && scale <= 1.05
-          ? Math.max(0, Math.round(mainHeight - (vv.height + vv.offsetTop)))
+          ? Math.max(0, Math.round(mainBottom - (vv.height + vv.offsetTop)))
           : 0;
-      const isKbActive = occludedBottom >= 40;
-      const insetPx = isKbActive ? occludedBottom : 0;
+      const layoutShrink = Math.max(0, restingHeightRef.current - mainHeight);
+      const isVisualKbActive = occludedBottom >= 40;
+      const isLayoutKbActive =
+        (isTypingFocusedRef.current || wasKbOpenRef.current) && layoutShrink >= 60;
+      const isKbActive = isVisualKbActive || isLayoutKbActive;
+
+      if (
+        occludedBottom >= 100 ||
+        (isTypingFocusedRef.current && layoutShrink >= 100)
+      ) {
+        wasKbOpenRef.current = true;
+      } else if (
+        wasKbOpenRef.current &&
+        !isKbActive &&
+        Date.now() - focusedAtRef.current > 350
+      ) {
+        wasKbOpenRef.current = false;
+        restingHeightRef.current = mainHeight;
+        if (isTypingFocusedRef.current && !closingSheetRef.current) {
+          isTypingFocusedRef.current = false;
+          setIsExpandingFromSubmit(false);
+          setIsTypingFocused(false);
+          inputRef.current?.blur();
+        }
+      }
+
+      const insetPx = isVisualKbActive ? occludedBottom : 0;
 
       document.documentElement.style.setProperty("--keyboard-inset", `${insetPx}px`);
 
@@ -237,7 +285,8 @@ export function App() {
       ? 320
       : 488;
 
-  const restingStageHeight = Math.min(rawStageHeight, Math.max(260, viewportHeight - 204));
+  const availableStageHeight = Math.max(180, viewportHeight - 220);
+  const restingStageHeight = Math.min(rawStageHeight, availableStageHeight);
   const stageHeight = isTypingFocused ? FOCUSED_TYPING_STAGE_HEIGHT : restingStageHeight;
 
   useLayoutEffect(() => {
@@ -254,6 +303,7 @@ export function App() {
     isTypingFocusedRef.current = focused;
     setIsTypingFocused(focused);
     if (focused) {
+      focusedAtRef.current = Date.now();
       setIsInitialOpenStagger(false);
       setIsExpandingFromSubmit(false);
       setPickerTarget(null);
@@ -1156,7 +1206,7 @@ export function App() {
         </Layer>
 
         {/* Storefront Product Detail Modal when tapping products on PLP */}
-        <Layer className="w-full h-full pointer-events-none isolate z-30 stack-grid">
+        <Layer className="w-full h-full min-h-0 pointer-events-none isolate z-30 stack-grid grid-rows-1 overflow-hidden">
           <AnimatePresence>
             {!sheetOpen && detailBag ? (
               <ProductDetailModal

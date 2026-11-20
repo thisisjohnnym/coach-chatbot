@@ -168,9 +168,9 @@ export function AssistantSheetShell({
                   }
             }
             transition={prefersReducedMotion ? { duration: 0 } : TRANSITION_SHEET_OPEN}
-            className="stack-cell self-end w-full isolate z-10 will-change-transform"
+            className="stack-cell self-end w-full max-h-full min-w-0 flex flex-col isolate z-10 will-change-transform"
           >
-            <LayerGrid className="w-full rounded-t-sheet overflow-hidden bg-surface-sheet isolate">
+            <LayerGrid className="w-full max-h-full min-h-0 rounded-t-sheet overflow-hidden bg-surface-sheet isolate">
               {/* Textured champagne-taupe background */}
               <Layer className="w-full h-0 min-h-full pointer-events-none stack-grid grid-rows-1 overflow-hidden z-0">
                 <img
@@ -183,7 +183,7 @@ export function AssistantSheetShell({
               </Layer>
 
               {/* Foreground sheet chrome + continuous stage */}
-              <Stack className="stack-cell w-full isolate z-10">
+              <Stack className="stack-cell w-full max-h-full min-h-0 min-w-0 isolate z-10">
                 {/* Persistent Header (z-20 above stage, so Orb feather can breathe behind it with ZERO clip line!) */}
                 <motion.header
                   initial={
@@ -206,7 +206,7 @@ export function AssistantSheetShell({
                           ease: EASE_PREMIUM,
                         }
                   }
-                  className="pl-10 pr-14 py-20 flex flex-row items-center justify-between w-full shrink-0 z-20"
+                  className="pl-10 pr-14 py-20 flex flex-row items-center justify-between gap-8 w-full min-w-0 shrink-0 z-20"
                 >
                   <Cluster className="gap-5">
                     <img
@@ -309,12 +309,12 @@ export function AssistantSheetShell({
                   transition={stageHeightTransition}
                   inert={isTypingFocused || undefined}
                   className={clsx(
-                    "w-full z-10 overflow-visible",
+                    "w-full min-w-0 min-h-0 shrink z-10 overflow-visible",
                     shouldClipStage && "clip-stage-bottom",
                     isTypingFocused && "pointer-events-none",
                   )}
                 >
-                  <div className="w-full h-stage-content min-h-0 overflow-visible">
+                  <div className="w-full h-stage-content max-h-full min-w-0 min-h-0 overflow-visible">
                     {children}
                   </div>
                 </motion.div>
@@ -341,7 +341,7 @@ export function AssistantSheetShell({
                           ease: EASE_PREMIUM,
                         }
                   }
-                  className="w-full z-20"
+                  className="w-full min-w-0 shrink-0 z-20"
                 >
                   <ChatInputDock
                     inputRef={inputRef}
@@ -358,7 +358,7 @@ export function AssistantSheetShell({
               {/* Modal Overlay Layer (Choosing product A / B) */}
               <Layer
                 className={clsx(
-                  "w-full h-full stack-grid isolate z-30",
+                  "w-full h-0 min-h-full stack-grid grid-rows-1 overflow-hidden isolate z-30",
                   modalOverlay ? "pointer-events-auto" : "pointer-events-none"
                 )}
               >

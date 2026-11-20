@@ -39,11 +39,11 @@ function ProductTile({
       onClick={onSelect ? () => onSelect(bag) : undefined}
       className="flex-1 min-w-0 bg-surface cursor-pointer"
     >
-      <LayerGrid className="w-full h-257 bg-surface-muted overflow-hidden">
+      <LayerGrid className="w-full aspect-plp-card bg-surface-muted overflow-hidden">
         <img
           src={bag.image}
           alt={bag.name}
-          className="stack-cell w-full h-257 object-cover"
+          className="stack-cell w-full h-full object-cover"
         />
         <AnimatePresence initial={false}>
           {showViewedBadge && (
@@ -130,27 +130,28 @@ export function PlpListing({
       className="stack-cell h-full w-full overflow-y-auto no-scrollbar bg-surface pb-120"
     >
       {/* Top brand tab bar */}
-      <Cluster className="bg-surface-tabs h-48 w-full px-10 pt-8 justify-between">
-        <Cluster className="items-end">
+      <Cluster className="bg-surface-tabs h-48 w-full min-w-0 px-10 pt-8 justify-between gap-6">
+        <Cluster className="items-end min-w-0 shrink">
           <LayerGrid
             as="button"
             type="button"
             aria-label="Coach"
-            className="w-102 h-40 shrink-0 press-scale"
+            aria-current="page"
+            className="w-102 max-w-full min-w-0 h-40 shrink press-scale"
           >
             <img
               src="/assets/figma/retail-tab-bg.svg"
               alt=""
               width={102}
               height={40}
-              className="stack-cell w-102 h-40 pointer-events-none"
+              className="stack-cell w-full h-40 object-fill pointer-events-none"
             />
             <img
               src="/assets/figma/coach-logo.svg"
               alt="Coach"
               width={74}
               height={8}
-              className="stack-cell place-self-center w-74 h-8 pointer-events-none"
+              className="stack-cell place-self-center w-74 max-w-full px-6 h-8 object-contain pointer-events-none"
             />
           </LayerGrid>
 
@@ -158,26 +159,26 @@ export function PlpListing({
             as="button"
             type="button"
             aria-label="Coach Outlet"
-            className="w-152 h-40 shrink-0 press-scale"
+            className="w-152 max-w-full min-w-0 h-40 shrink press-scale"
           >
             <img
               src="/assets/figma/outlet-tab-bg.svg"
               alt=""
               width={152}
               height={40}
-              className="stack-cell w-152 h-40 pointer-events-none"
+              className="stack-cell w-full h-40 object-fill pointer-events-none"
             />
             <img
               src="/assets/figma/coach-outlet-logo.svg"
               alt="Coach Outlet"
               width={124}
               height={8}
-              className="stack-cell place-self-center w-124 h-8 pointer-events-none"
+              className="stack-cell place-self-center w-124 max-w-full px-8 h-8 object-contain pointer-events-none"
             />
           </LayerGrid>
         </Cluster>
 
-        <Cluster className="gap-4 pb-4 pr-2">
+        <Cluster className="gap-4 pb-4 pr-2 shrink-0">
           <LayerGrid
             as="button"
             type="button"
@@ -237,30 +238,24 @@ export function PlpListing({
             height={16}
             className="w-16 h-16 shrink-0"
           />
-          <span className="text-caption text-ink font-medium">
-            {isCompareScenario ? "Tabby" : "shoulder bags"}
-          </span>
+          <span className="text-caption text-ink-muted">Search</span>
         </Cluster>
       </Box>
 
       {/* Search results headline */}
-      <Box className="px-12 py-20 border-b border-border-subtle text-ink-primary">
-        <h1 className="text-title font-medium tracking-tight-title">
+      <Box className="px-12 py-16 border-b border-border-subtle text-ink-primary">
+        <h1 className="text-subhead font-medium tracking-sm m-0">
           {isCompareScenario
             ? "24 results for Tabby"
             : "150 results for shoulder bags"}
         </h1>
       </Box>
 
-      {/* Sticky filter bar — Safari 26 toolbar sampling: keep sticky host transparent and put fill/blur on absolute child */}
-      <Cluster className="sticky top-0 z-10 bg-transparent px-12 py-6 justify-start">
-        <Box
-          aria-hidden="true"
-          className="absolute inset-0 backdrop-blur-md bg-surface/95 border-b border-border-faint pointer-events-none"
-        />
+      {/* Filter & Sort bar */}
+      <Cluster className="bg-surface border-b border-border-faint px-12 py-6 justify-start">
         <button
           type="button"
-          className="z-10 min-h-36 flex flex-row items-center gap-6 press-scale text-ink"
+          className="min-h-36 flex flex-row items-center gap-6 press-scale text-ink"
         >
           <svg
             width={15}
