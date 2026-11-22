@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
-  DURATION_ENTER,
   EASE_PREMIUM,
+  EASE_SHEET_OPEN_CHOREO,
+  SHEET_OPEN_CHOREO,
   TRANSITION_ORB_EXIT,
   TRANSITION_ORB_GLIDE,
 } from "../motion/presets";
@@ -111,19 +112,25 @@ export function LiquidOrb({
       >
       <motion.div
         initial={
-          prefersReducedMotion || !staggerEntrance
+          prefersReducedMotion
             ? {
-                opacity: isReceded ? 0 : 0,
-                scale: isReceded ? 0.78 : 0.76,
-                y: isReceded ? -24 : 20,
-                filter: "blur(6px)",
+                opacity: isReceded ? 0 : 1,
+                scale: targetScale,
+                y: targetY,
+                filter: "blur(0px)",
               }
-            : {
-                opacity: 0,
-                scale: 0.74,
-                y: 24,
-                filter: "blur(6px)",
-              }
+            : staggerEntrance
+              ? {
+                  opacity: 0,
+                  scale: 0.8,
+                  y: targetY + 60,
+                }
+              : {
+                  opacity: isReceded ? 0 : 0,
+                  scale: isReceded ? 0.78 : 0.76,
+                  y: isReceded ? -24 : 20,
+                  filter: "blur(6px)",
+                }
         }
         animate={{
           opacity: targetOpacity,
@@ -135,10 +142,24 @@ export function LiquidOrb({
           prefersReducedMotion
             ? { duration: 0 }
             : isReceded
-            ? TRANSITION_ORB_EXIT
-            : staggerEntrance
-            ? { duration: DURATION_ENTER, delay: 0.15, ease: EASE_PREMIUM }
-            : TRANSITION_ORB_GLIDE
+              ? TRANSITION_ORB_EXIT
+              : staggerEntrance
+                ? {
+                    opacity: {
+                      ...SHEET_OPEN_CHOREO.orb.opacity,
+                      ease: EASE_SHEET_OPEN_CHOREO,
+                    },
+                    scale: {
+                      ...SHEET_OPEN_CHOREO.orb.scale,
+                      ease: EASE_SHEET_OPEN_CHOREO,
+                    },
+                    y: {
+                      ...SHEET_OPEN_CHOREO.orb.y,
+                      ease: EASE_SHEET_OPEN_CHOREO,
+                    },
+                    filter: { duration: 0 },
+                  }
+                : TRANSITION_ORB_GLIDE
         }
         className="overflow-visible will-change-transform"
       >

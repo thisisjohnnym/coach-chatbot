@@ -34,7 +34,6 @@ import {
   type OutfitStage,
   type OutfitThreadTurn,
 } from "./OutfitFlowView";
-import { ProgressiveBlurEdge } from "./ProgressiveBlurEdge";
 
 export type ChatTurnStatus =
   | "thinking"
@@ -899,9 +898,6 @@ export function ChatThreadView({
           })}
         </div>
       </div>
-
-      <ProgressiveBlurEdge position="top" visible={hasTopEdge} />
-      <ProgressiveBlurEdge position="bottom" visible={hasBottomEdge} />
 
       <Layer className="z-20 self-end justify-self-center pb-10 pointer-events-none">
         <AnimatePresence>

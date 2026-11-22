@@ -17,6 +17,53 @@ export const EASE_SHEET: [number, number, number, number] = [0.19, 1, 0.22, 1];
  */
 export const EASE_SHEET_IOS: [number, number, number, number] = [0.32, 0.72, 0, 1];
 
+/**
+ * Figma Coach sheet-open choreography ease (node 2176:34661).
+ * Slight overshoot settle used across orb, headline, tiles, and dock.
+ */
+export const EASE_SHEET_OPEN_CHOREO: [number, number, number, number] = [
+  0.587, 0.121, 0.129, 1.021,
+];
+
+/** Soft mid-curve used for brand fade and dock blur clear. */
+export const EASE_SHEET_OPEN_SOFT: [number, number, number, number] = [
+  0.5, 0, 0.5, 1,
+];
+
+/**
+ * One-shot open timings derived from the 2s Figma timeline (loop stripped).
+ * Delays = hold end; durations = settle − hold end.
+ */
+export const SHEET_OPEN_CHOREO = {
+  brand: { delay: 0, duration: 0.483 },
+  close: {
+    opacity: { delay: 0.133, duration: 0.55 },
+    rotate: { delay: 0.133, duration: 0.55 },
+    scale: { delay: 0.133, duration: 0.4 },
+  },
+  orb: {
+    opacity: { delay: 0, duration: 1.2 },
+    scale: { delay: 0, duration: 0.733 },
+    y: { delay: 0, duration: 1.2 },
+  },
+  headline: {
+    opacity: { delay: 0.117, duration: 1.05 },
+    y: { delay: 0.117, duration: 1.05 },
+    filter: { delay: 0.333, duration: 0.367 },
+  },
+  /** Tile order: narrow, outfit, compare, gift */
+  tiles: [
+    { delay: 0.283, duration: 0.85 },
+    { delay: 0.35, duration: 0.783 },
+    { delay: 0.4, duration: 0.75 },
+    { delay: 0.483, duration: 0.65 },
+  ],
+  dock: {
+    y: { delay: 0.55, duration: 0.65 },
+    filter: { delay: 0.783, duration: 0.3 },
+  },
+} as const;
+
 export const DURATION_ENTER = 0.8;
 export const DURATION_EXIT = 0.56;
 export const EXIT_SETTLE_MS = 580;

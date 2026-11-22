@@ -5,6 +5,8 @@ import {
   DURATION_ENTER,
   DURATION_EXIT,
   EASE_PREMIUM,
+  EASE_SHEET_OPEN_CHOREO,
+  SHEET_OPEN_CHOREO,
   blurScaleVariants,
   staggerGridVariants,
 } from "../motion/presets";
@@ -21,6 +23,13 @@ export interface ColdStartViewProps {
 const ROW_ONE_ACTIONS = COLD_START_ACTIONS.filter((action) => action.row === 1);
 const ROW_TWO_ACTIONS = COLD_START_ACTIONS.filter((action) => action.row === 2);
 
+const TILE_INDEX_BY_ID: Record<StarterAction["id"], number> = {
+  narrow: 0,
+  outfit: 1,
+  compare: 2,
+  gift: 3,
+};
+
 export function ColdStartView({
   selectedStarterId,
   sheetOpenStagger = false,
@@ -36,16 +45,52 @@ export function ColdStartView({
     rowHeightClass: "cold-start-card-tall" | "cold-start-card-short",
   ) => {
     const isSelected = selectedStarterId === action.id;
+    const tileTiming = SHEET_OPEN_CHOREO.tiles[TILE_INDEX_BY_ID[action.id]];
 
     return (
       <motion.button
         key={action.id}
         type="button"
-        variants={alreadyHidden ? undefined : blurScaleVariants}
+        variants={
+          alreadyHidden || sheetOpenStagger ? undefined : blurScaleVariants
+        }
+        initial={
+          alreadyHidden || prefersReducedMotion
+            ? false
+            : sheetOpenStagger
+              ? { opacity: 0, y: 21 }
+              : undefined
+        }
+        animate={
+          sheetOpenStagger && !alreadyHidden && !prefersReducedMotion
+            ? {
+                opacity: 1,
+                y: 0,
+                transition: {
+                  duration: tileTiming.duration,
+                  delay: tileTiming.delay,
+                  ease: EASE_SHEET_OPEN_CHOREO,
+                },
+              }
+            : undefined
+        }
+        exit={
+          alreadyHidden
+            ? { opacity: 0, transition: { duration: 0 } }
+            : sheetOpenStagger
+              ? {
+                  opacity: 0,
+                  scale: 0.95,
+                  filter: "blur(3px)",
+                  y: -8,
+                  transition: { duration: DURATION_EXIT, ease: EASE_PREMIUM },
+                }
+              : undefined
+        }
         aria-pressed={isSelected}
         onClick={() => onSelectStarter(action)}
         className={clsx(
-          "flex-1 min-w-0 p-12 rounded-tile border flex flex-col items-start justify-between gap-8 text-left text-ink-inverse press-scale motion-reduce:transition-none",
+          "flex-1 min-w-0 p-12 rounded-tile border flex flex-col items-start justify-between gap-8 text-left text-ink-inverse press-scale motion-reduce:transition-none will-change-transform",
           rowHeightClass,
           isExitingSelection && "pointer-events-none",
           isSelected
@@ -88,16 +133,43 @@ export function ColdStartView({
         className="w-full will-change-transform"
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.94, filter: "blur(4px)", y: 12 }}
+          initial={
+            prefersReducedMotion
+              ? { opacity: 1 }
+              : sheetOpenStagger
+                ? { opacity: 0, y: 40, filter: "blur(12px)" }
+                : { opacity: 0, scale: 0.94, filter: "blur(4px)", y: 12 }
+          }
           animate={{
             opacity: 1,
             scale: 1,
             filter: "blur(0px)",
             y: 0,
-            transition: {
-              duration: DURATION_ENTER,
-              delay: sheetOpenStagger ? 0.26 : 0.05,
-              ease: EASE_PREMIUM,
+            transition: prefersReducedMotion
+              ? { duration: 0 }
+              : sheetOpenStagger
+                ? {
+                    opacity: {
+                      ...SHEET_OPEN_CHOREO.headline.opacity,
+                      ease: EASE_SHEET_OPEN_CHOREO,
+                    },
+                    y: {
+                      ...SHEET_OPEN_CHOREO.headline.y,
+                      ease: EASE_SHEET_OPEN_CHOREO,
+                    },
+                    filter: {
+                      ...SHEET_OPEN_CHOREO.headline.filter,
+                      ease: EASE_SHEET_OPEN_CHOREO,
+                    },
+                    scale: { duration: 0 },
+                  }
+                : {
+                    duration: DURATION_ENTER,
+                    delay: 0.05,
+                    ease: EASE_PREMIUM,
+                  },
+            transitionEnd: {
+              filter: "none",
             },
           }}
           exit={
@@ -111,7 +183,7 @@ export function ColdStartView({
                   transition: { duration: DURATION_EXIT, ease: EASE_PREMIUM },
                 }
           }
-          className="cold-start-heading px-10 w-full text-center"
+          className="cold-start-heading px-10 w-full text-center will-change-transform"
         >
           <h2 className="text-heading text-ink-inverse tracking-sm font-normal text-balance m-0">
             How can I help?
@@ -137,31 +209,50 @@ export function ColdStartView({
         }
         className="w-full min-w-0 overflow-visible will-change-transform"
       >
-        <motion.div
-          variants={{
-            hidden: {},
-            visible: {
-              transition: {
-                staggerChildren: 0.075,
-                delayChildren: sheetOpenStagger ? 0.34 : 0.11,
+        {sheetOpenStagger ? (
+          <Box className="w-full min-w-0 overflow-visible">
+            <Box className="flex flex-row gap-10 w-full mb-10 items-stretch">
+              {ROW_ONE_ACTIONS.map((action) =>
+                renderCard(action, "cold-start-card-tall"),
+              )}
+            </Box>
+            <Box className="flex flex-row gap-10 w-full items-stretch">
+              {ROW_TWO_ACTIONS.map((action) =>
+                renderCard(action, "cold-start-card-short"),
+              )}
+            </Box>
+          </Box>
+        ) : (
+          <motion.div
+            variants={{
+              hidden: {},
+              visible: {
+                transition: {
+                  staggerChildren: 0.075,
+                  delayChildren: 0.11,
+                },
               },
-            },
-            exit: alreadyHidden
-              ? { opacity: 0, transition: { duration: 0 } }
-              : staggerGridVariants.exit,
-          }}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="w-full min-w-0 overflow-visible"
-        >
-          <Box className="flex flex-row gap-10 w-full mb-10 items-stretch">
-            {ROW_ONE_ACTIONS.map((action) => renderCard(action, "cold-start-card-tall"))}
-          </Box>
-          <Box className="flex flex-row gap-10 w-full items-stretch">
-            {ROW_TWO_ACTIONS.map((action) => renderCard(action, "cold-start-card-short"))}
-          </Box>
-        </motion.div>
+              exit: alreadyHidden
+                ? { opacity: 0, transition: { duration: 0 } }
+                : staggerGridVariants.exit,
+            }}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="w-full min-w-0 overflow-visible"
+          >
+            <Box className="flex flex-row gap-10 w-full mb-10 items-stretch">
+              {ROW_ONE_ACTIONS.map((action) =>
+                renderCard(action, "cold-start-card-tall"),
+              )}
+            </Box>
+            <Box className="flex flex-row gap-10 w-full items-stretch">
+              {ROW_TWO_ACTIONS.map((action) =>
+                renderCard(action, "cold-start-card-short"),
+              )}
+            </Box>
+          </motion.div>
+        )}
       </motion.div>
     </Stack>
   );

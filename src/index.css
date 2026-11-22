@@ -236,7 +236,7 @@
   animation: resume-stroke-glide 4.6s linear infinite;
 }
 
-/* Smooth opacity feather masks at top/bottom scroll boundaries (paired with ProgressiveBlurEdge) */
+/* Soft opacity feather at scroll edges — seam-hides content under header / above input dock */
 @utility scroll-mask-bottom {
   -webkit-mask-image: linear-gradient(
     to bottom,

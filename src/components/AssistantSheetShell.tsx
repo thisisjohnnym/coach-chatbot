@@ -5,6 +5,9 @@ import {
   DURATION_ENTER,
   DURATION_EXIT,
   EASE_PREMIUM,
+  EASE_SHEET_OPEN_CHOREO,
+  EASE_SHEET_OPEN_SOFT,
+  SHEET_OPEN_CHOREO,
   TRANSITION_EXIT,
   TRANSITION_SHEET_CLOSE,
   TRANSITION_SHEET_HEIGHT,
@@ -192,43 +195,53 @@ export function AssistantSheetShell({
 
               {/* Foreground sheet chrome + continuous stage */}
               <Stack className="stack-cell w-full max-h-full min-h-0 min-w-0 isolate z-10">
-                {/* Persistent Header (z-20 above stage, so Orb feather can breathe behind it with ZERO clip line!) */}
-                <motion.header
-                  initial={
-                    prefersReducedMotion || !staggerChrome
-                      ? { opacity: 0, filter: "blur(3px)" }
-                      : { opacity: 0, filter: "blur(4px)", scale: 0.96, y: 8 }
-                  }
-                  animate={{ opacity: 1, filter: "blur(0px)", scale: 1, y: 0 }}
-                  exit={{
-                    opacity: 0,
-                    filter: "blur(3px)",
-                    transition: TRANSITION_EXIT,
-                  }}
-                  transition={
-                    prefersReducedMotion
-                      ? { duration: 0 }
-                      : {
-                          duration: DURATION_ENTER,
-                          delay: staggerChrome ? 0.1 : 0.05,
-                          ease: EASE_PREMIUM,
-                        }
-                  }
-                  className="pl-10 pr-14 py-20 flex flex-row items-center justify-between gap-8 w-full min-w-0 shrink-0 z-20"
-                >
-                  <Cluster className="gap-5">
-                    <img
-                      src="/assets/figma/sparkle-white.svg"
-                      alt=""
-                      className="shrink-0"
-                    />
-                    <Box
-                      as="span"
-                      className="text-body text-ink-inverse tracking-xs pt-3 whitespace-nowrap"
-                    >
-                      Ask Coach AI
-                    </Box>
-                  </Cluster>
+                {/* Persistent Header — brand fade + close spin from Figma 2176:34661 */}
+                <header className="pl-10 pr-14 py-20 flex flex-row items-center justify-between gap-8 w-full min-w-0 shrink-0 z-20">
+                  <motion.div
+                    initial={
+                      prefersReducedMotion
+                        ? { opacity: 1 }
+                        : staggerChrome
+                          ? { opacity: 0 }
+                          : { opacity: 0, filter: "blur(3px)" }
+                    }
+                    animate={{ opacity: 1, filter: "blur(0px)" }}
+                    exit={{
+                      opacity: 0,
+                      filter: "blur(3px)",
+                      transition: TRANSITION_EXIT,
+                    }}
+                    transition={
+                      prefersReducedMotion
+                        ? { duration: 0 }
+                        : staggerChrome
+                          ? {
+                              duration: SHEET_OPEN_CHOREO.brand.duration,
+                              delay: SHEET_OPEN_CHOREO.brand.delay,
+                              ease: EASE_SHEET_OPEN_SOFT,
+                            }
+                          : {
+                              duration: DURATION_ENTER,
+                              delay: 0.05,
+                              ease: EASE_PREMIUM,
+                            }
+                    }
+                    className="min-w-0"
+                  >
+                    <Cluster className="gap-5">
+                      <img
+                        src="/assets/figma/sparkle-white.svg"
+                        alt=""
+                        className="shrink-0"
+                      />
+                      <Box
+                        as="span"
+                        className="text-body text-ink-inverse tracking-xs pt-3 whitespace-nowrap"
+                      >
+                        Ask Coach AI
+                      </Box>
+                    </Cluster>
+                  </motion.div>
 
                   <Cluster className="gap-10 h-21 shrink-0">
                     <AnimatePresence
@@ -293,22 +306,68 @@ export function AssistantSheetShell({
                       )}
                     </AnimatePresence>
 
-                    <Box
-                      as="button"
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={onClose}
-                      aria-label="Close Ask Coach AI"
-                      className="p-6 rounded-pill flex items-center justify-center shrink-0 press-scale motion-reduce:transition-none"
+                    <motion.div
+                      initial={
+                        prefersReducedMotion
+                          ? { opacity: 1, rotate: 0, scale: 1 }
+                          : staggerChrome
+                            ? { opacity: 0, rotate: -90, scale: 0.8 }
+                            : { opacity: 0, scale: 0.94 }
+                      }
+                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                      exit={{
+                        opacity: 0,
+                        transition: TRANSITION_EXIT,
+                      }}
+                      transition={
+                        prefersReducedMotion
+                          ? { duration: 0 }
+                          : staggerChrome
+                            ? {
+                                opacity: {
+                                  ...SHEET_OPEN_CHOREO.close.opacity,
+                                  ease: EASE_SHEET_OPEN_CHOREO,
+                                },
+                                rotate: {
+                                  ...SHEET_OPEN_CHOREO.close.rotate,
+                                  ease: EASE_SHEET_OPEN_CHOREO,
+                                },
+                                scale: {
+                                  ...SHEET_OPEN_CHOREO.close.scale,
+                                  ease: EASE_SHEET_OPEN_SOFT,
+                                },
+                              }
+                            : {
+                                duration: DURATION_ENTER,
+                                delay: 0.05,
+                                ease: EASE_PREMIUM,
+                              }
+                      }
+                      // design-system-escape: motion rotate/scale needs explicit transform-origin pivot
+                      style={{ transformOrigin: "50% 50%" }}
+                      className="shrink-0 will-change-transform"
                     >
-                      <img
-                        src="/assets/figma/icon-close-sheet.svg"
-                        alt=""
-                        className="shrink-0"
-                      />
-                    </Box>
+                      <Box
+                        as="button"
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={handleScrimClick}
+                        aria-label={
+                          isTypingFocused
+                            ? "Dismiss keyboard"
+                            : "Close Ask Coach AI"
+                        }
+                        className="p-6 rounded-pill flex items-center justify-center shrink-0 press-scale motion-reduce:transition-none"
+                      >
+                        <img
+                          src="/assets/figma/icon-close-sheet.svg"
+                          alt=""
+                          className="shrink-0"
+                        />
+                      </Box>
+                    </motion.div>
                   </Cluster>
-                </motion.header>
+                </header>
 
                 {/* Stage container clips cleanly at dock edge while collapsing/expanding for Focused Typing View, keeping top Orb glow unclipped */}
                 <motion.div
@@ -327,14 +386,21 @@ export function AssistantSheetShell({
                   </div>
                 </motion.div>
 
-                {/* Persistent Input Dock (z-20) */}
+                {/* Persistent Input Dock — rises + unblurs late in the open choreography */}
                 <motion.div
                   initial={
-                    prefersReducedMotion || !staggerChrome
-                      ? { opacity: 0, filter: "blur(3px)" }
-                      : { opacity: 0, filter: "blur(4px)", scale: 0.97, y: 14 }
+                    prefersReducedMotion
+                      ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                      : staggerChrome
+                        ? { y: 135, filter: "blur(12px)" }
+                        : { opacity: 0, filter: "blur(3px)", y: 14 }
                   }
-                  animate={{ opacity: 1, filter: "blur(0px)", scale: 1, y: 0 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    filter: "blur(0px)",
+                    transitionEnd: { filter: "none" },
+                  }}
                   exit={{
                     opacity: 0,
                     filter: "blur(3px)",
@@ -343,13 +409,25 @@ export function AssistantSheetShell({
                   transition={
                     prefersReducedMotion
                       ? { duration: 0 }
-                      : {
-                          duration: DURATION_ENTER,
-                          delay: staggerChrome ? 0.2 : 0.08,
-                          ease: EASE_PREMIUM,
-                        }
+                      : staggerChrome
+                        ? {
+                            y: {
+                              ...SHEET_OPEN_CHOREO.dock.y,
+                              ease: EASE_SHEET_OPEN_CHOREO,
+                            },
+                            filter: {
+                              ...SHEET_OPEN_CHOREO.dock.filter,
+                              ease: EASE_SHEET_OPEN_SOFT,
+                            },
+                            opacity: { duration: 0 },
+                          }
+                        : {
+                            duration: DURATION_ENTER,
+                            delay: 0.08,
+                            ease: EASE_PREMIUM,
+                          }
                   }
-                  className="w-full min-w-0 shrink-0 z-20"
+                  className="w-full min-w-0 shrink-0 z-20 will-change-transform"
                 >
                   <ChatInputDock
                     inputRef={inputRef}
