@@ -136,9 +136,45 @@ export function LiquidOrb({
               state={toGlassState(stageState)}
               paused={paused}
               transparent
-              cast={0.55}
-              halo={0.9}
-              perspective={0.35}
+              radius={0.73}
+              blur={0.25}
+              wobble={0.8}
+              grain={0}
+              cast={0.1}
+              reach={0.45}
+              castFalloff={2.5}
+              castDirectional={0.96}
+              castX={-0.19}
+              castY={-0.19}
+              castTint={0.91}
+              castColor="#ffcf9e"
+              shape="spheres"
+              morph={0.09}
+              shapeSize={1.42}
+              innerBlur={0.48}
+              refraction={-0.06}
+              refractionAnimate
+              refractionMin={0}
+              refractionMax={1}
+              refractionPeriod={6}
+              refractionWave="smooth"
+              dispersion={1}
+              perspective={0.14}
+              halo={0}
+              material="glass"
+              particlesIn={96}
+              particleSpread={1.2}
+              particlesOut={91}
+              orbitPattern="orbits"
+              orbitDirection="mixed"
+              orbitRadius={1}
+              orbitSpread={0.14}
+              orbitTilt={0.33}
+              particleSize={0.4}
+              particleSpeed={0.35}
+              particleTwinkle={1}
+              particleDepth={1}
+              particleOpacity={0.48}
             />
           </div>
         </motion.div>
