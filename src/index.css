@@ -195,6 +195,7 @@
   inherits: false;
 }
 
+/* Thin pill border only — no filter, so @property cost stays small */
 @keyframes resume-stroke-glide {
   from {
     --resume-stroke-angle: 270deg;
@@ -204,12 +205,26 @@
   }
 }
 
+/*
+ * Glow: static conic + static blur, spin via transform only.
+ * Same look as animating --resume-stroke-angle through a live blur,
+ * but the blurred bitmap is composited once and rotated on the GPU.
+ */
+@keyframes resume-glow-spin {
+  from {
+    transform: translateY(3.5px) rotate(0deg);
+  }
+  to {
+    transform: translateY(3.5px) rotate(360deg);
+  }
+}
+
 @utility resume-ai-glow {
   margin: -14px -15px -18px;
   padding: 18px;
   background-clip: content-box;
   background-image: conic-gradient(
-    from var(--resume-stroke-angle) at 50% 50%,
+    from 270deg at 50% 50%,
     transparent 6%,
     var(--color-stroke-ai-cyan) 25%,
     var(--color-stroke-ai-gold) 50%,
@@ -219,8 +234,12 @@
   -webkit-filter: blur(5.5px) saturate(0.85) brightness(0.88);
   filter: blur(5.5px) saturate(0.85) brightness(0.88);
   opacity: 0.34;
-  translate: 0 3.5px;
-  animation: resume-stroke-glide 4.6s linear infinite;
+  transform-origin: center;
+  animation: resume-glow-spin 4.6s linear infinite;
+  will-change: transform;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 @utility resume-ai-pill {
@@ -234,6 +253,9 @@
     var(--color-ink) 100%
   );
   animation: resume-stroke-glide 4.6s linear infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 /* Soft opacity feather at scroll edges — seam-hides content under header / above input dock */
@@ -300,65 +322,6 @@
   );
 }
 
-/* Liquid orb slow organic drift keyframes (staged visual ambient loop) */
-@keyframes orb-lobe-spin-cw {
-  from {
-    transform: rotate(0deg) scale(1);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.06);
-  }
-  to {
-    transform: rotate(360deg) scale(1);
-  }
-}
-
-@keyframes orb-lobe-spin-ccw {
-  from {
-    transform: rotate(360deg) scale(1.04);
-  }
-  50% {
-    transform: rotate(180deg) scale(0.96);
-  }
-  to {
-    transform: rotate(0deg) scale(1.04);
-  }
-}
-
-@keyframes orb-liquid-morph {
-  0%,
-  100% {
-    transform: rotate(0deg) scale3d(1, 1, 1);
-  }
-  33% {
-    transform: rotate(2.5deg) scale3d(1.035, 0.97, 1);
-  }
-  66% {
-    transform: rotate(-2.5deg) scale3d(0.97, 1.035, 1);
-  }
-}
-
-/* WebKit-safe LiquidOrb feather + hard radial mask (avoids Safari overflow:hidden + filter rectangular clip bug) */
-@utility orb-feather {
-  -webkit-filter: blur(5.5px);
-  filter: blur(5.5px);
-  transform: translateZ(0);
-}
-
-@utility orb-sphere-mask {
-  border-radius: 9999px;
-  -webkit-mask-image: radial-gradient(
-    circle closest-side,
-    #000000 98.5%,
-    transparent 100%
-  );
-  mask-image: radial-gradient(
-    circle closest-side,
-    #000000 98.5%,
-    transparent 100%
-  );
-}
-
 @keyframes typing-dot-bounce {
   0%,
   80%,
@@ -370,30 +333,6 @@
     transform: translateY(-3px);
     opacity: 1;
   }
-}
-
-@utility animate-orb-cw {
-  animation: orb-lobe-spin-cw 11s ease-in-out infinite;
-}
-
-@utility animate-orb-cw-fast {
-  animation: orb-lobe-spin-cw 4.2s ease-in-out infinite;
-}
-
-@utility animate-orb-ccw {
-  animation: orb-lobe-spin-ccw 14s ease-in-out infinite;
-}
-
-@utility animate-orb-ccw-fast {
-  animation: orb-lobe-spin-ccw 5.4s ease-in-out infinite;
-}
-
-@utility animate-orb-morph {
-  animation: orb-liquid-morph 7s ease-in-out infinite;
-}
-
-@utility animate-orb-morph-fast {
-  animation: orb-liquid-morph 2.8s ease-in-out infinite;
 }
 
 @utility animate-dot-1 {

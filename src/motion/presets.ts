@@ -204,6 +204,10 @@ export const upwardCraftedBubbleVariants: Variants = {
     filter: "blur(0px)",
     y: 0,
     transition: TRANSITION_CRAFT_UPWARD,
+    // Clear idle filter so blur only costs during the transition
+    transitionEnd: {
+      filter: "none",
+    },
   },
   exit: {
     opacity: 0,

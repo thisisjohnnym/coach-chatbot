@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { AnimatePresence, motion } from "motion/react";
 import clsx from "clsx";
 import {
@@ -28,7 +36,7 @@ import { PlpListing } from "./components/PlpListing";
 import type { StoriesSpotAction } from "./components/ContentSpotStories";
 import { ClosedFloatingOverlay } from "./components/ClosedFloatingOverlay";
 import { AssistantSheetShell } from "./components/AssistantSheetShell";
-import { LiquidOrb, type OrbStageState } from "./components/LiquidOrb";
+import type { OrbStageState } from "./components/LiquidOrb";
 import { ColdStartView } from "./components/ColdStartView";
 import {
   ChatThreadView,
@@ -40,6 +48,11 @@ import type { CompareThreadTurn } from "./components/CompareFlowView";
 import type { OutfitThreadTurn } from "./components/OutfitFlowView";
 import { ProductPickerModal } from "./components/ProductPickerModal";
 import { ProductDetailModal } from "./components/ProductDetailModal";
+
+const LiquidOrb = lazy(async () => {
+  const mod = await import("./components/LiquidOrb");
+  return { default: mod.LiquidOrb };
+});
 
 type ActiveSheetView = "cold-start" | "exiting-cold-start" | "thread" | "transitioning-reset";
 
@@ -1364,14 +1377,16 @@ export function App() {
               }
             >
               <LayerGrid className="w-full h-full min-h-0 grid-rows-1 overflow-visible">
-                {/* Persistent GPU-composited LiquidOrb: zero clipping (overflow-visible), smooth glide, subtle blur+opacity exit */}
+                {/* Persistent WebGL LiquidOrb (Forge glass bead): Motion owns glide / blur exit */}
                 <Layer className="self-start w-full pointer-events-none z-10 overflow-visible">
-                  <LiquidOrb
-                    stageState={orbStageState}
-                    bloomKey={orbBloomKey}
-                    staggerEntrance={isInitialOpenStagger}
-                    hiddenForTyping={isTypingFocused}
-                  />
+                  <Suspense fallback={null}>
+                    <LiquidOrb
+                      stageState={orbStageState}
+                      bloomKey={orbBloomKey}
+                      staggerEntrance={isInitialOpenStagger}
+                      hiddenForTyping={isTypingFocused}
+                    />
+                  </Suspense>
                 </Layer>
 
                 {/* Stage Views: strict mode="wait" guarantees exiting view finishes before next view enters */}
