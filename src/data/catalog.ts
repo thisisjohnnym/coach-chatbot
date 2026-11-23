@@ -224,16 +224,17 @@ export const COMPARE_LOADING_COPY = "Comparing side by side...";
 export const HOW_TO_WEAR_PROMPT = "Show me how to wear it";
 export const UGC_PLAY_PROMPT = "Play this look";
 
+/** Figma chat 22 option pills (node 2220:24010). */
 export const STATEMENT_FOLLOW_UP_OPTIONS = [
-  "Which is best for going-out?",
+  "Which is best for going out?",
   "Show me something more unexpected",
-  "More with sparkle",
+  "More with gold hardware",
 ];
 
 export const STUB_FOLLOW_UP_OPTIONS = [
   "Show me something that makes a statement",
-  "Which is best for going-out?",
-  "More with sparkle",
+  "Which is best for going out?",
+  "More with gold hardware",
 ];
 
 export interface ContentSpotAdCopy {
@@ -278,7 +279,8 @@ export function getContentSpotAdCopy(
   }
 
   return {
-    headlineLines: ["Still looking for", "the one? Just ask."],
+    // Figma assistant ad 2219:49477
+    headlineLines: ["Still looking for the one?", "Just ask."],
     prompts: [...PROMPTED_AD_PROMPTS],
   };
 }
@@ -409,8 +411,6 @@ export const OUTFIT_MATCH_REPLY: CannedReply = {
     "Love the cream and navy knit with warm gold jewelry. Rich maple, dark cherry, and sculpted brass hardware will ground the pattern without competing with it.",
   ],
   bags: [BAG_CATALOG[1], BAG_CATALOG[4], BAG_CATALOG[0]],
-  followUpNote:
-    "Soft Tabby 20 in Maple echoes your warm gold accents for daytime, while Chelsea 30 in Dark Cherry adds moody contrast against denim.",
   options: [
     "Compare Soft Tabby 20 and Chelsea 30",
     "Which is best for going out?",
@@ -474,11 +474,7 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
       leadParagraphs: [
         "Feature coming soon — wear videos and UGC playback are on the way.",
       ],
-      options: [
-        "Which is best for going-out?",
-        "Show me something more unexpected",
-        "Compare two bags",
-      ],
+      options: STATEMENT_FOLLOW_UP_OPTIONS,
     };
   }
 
@@ -488,11 +484,7 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
         "Here’s how people are wearing these styles right now — tap a clip for the full video experience.",
       ],
       ugcClips: HOW_TO_WEAR_UGC_CLIPS,
-      options: [
-        "Which is best for going-out?",
-        "Show me something more unexpected",
-        "More with sparkle",
-      ],
+      options: STATEMENT_FOLLOW_UP_OPTIONS,
     };
   }
 
@@ -566,11 +558,9 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
   if (lower.includes("work") || lower.includes("holds more")) {
     return {
       leadParagraphs: [
-        "For workdays and fuller carry, the Brooklyn 28 and Chelsea 30 offer the most generous interior room while keeping a clean, sculptural profile on the shoulder.",
+        "For workdays and fuller carry, look for generous interiors with a clean, sculptural shoulder profile — room for the day without losing shape.",
       ],
       bags: [BAG_CATALOG[5], BAG_CATALOG[4], BAG_CATALOG[0]],
-      followUpNote:
-        "Brooklyn 28 fits daily essentials with effortless drape, while Chelsea 30 adds a structured East-West flap and detachable strap.",
       options: [
         "Compare Brooklyn 28 and Chelsea 30",
         "More with gold hardware",
@@ -585,8 +575,6 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
         "Convertible straps give you two distinct looks in one bag — tuck one under your arm for dinner, then clip on the long strap when you want hands-free ease.",
       ],
       bags: [BAG_CATALOG[0], BAG_CATALOG[1], BAG_CATALOG[2]],
-      followUpNote:
-        "Tabby 26 and Soft Tabby 20 include detachable shoulder and crossbody straps, while Juliet 25 switches between a leather strap and a sculptural chain.",
       options: [
         "Compare Tabby 26 and Soft Tabby 20",
         "Which is best for going out?",
@@ -598,15 +586,13 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
   if (lower.includes("going out") || lower.includes("going-out")) {
     return {
       leadParagraphs: [
-        "For evenings out, the Juliet 25 is your standout piece — quilted leather and removable chain charms catch every light without weighing you down.",
+        "For evenings out, look for light-catching texture, compact carry, and hardware that reads like jewelry once the lights go low.",
       ],
       bags: [BAG_CATALOG[2], BAG_CATALOG[1], BAG_CATALOG[0]],
-      followUpNote:
-        "Carry Juliet on the short chain for cocktails, or clip on the leather strap when the night keeps moving.",
       options: [
         "Compare Juliet 25 and Tabby 26",
         "Show me something more unexpected",
-        "More with sparkle",
+        "More with gold hardware",
       ],
     };
   }
@@ -614,11 +600,9 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
   if (lower.includes("sparkle") || lower.includes("crystal")) {
     return {
       leadParagraphs: [
-        "For sparkle with substance, Crystal Signature Jacquard and polished hardware turn evening light into the whole look.",
+        "For sparkle with substance, crystal jacquard, charm detail, and polished frame hardware turn evening light into the whole look.",
       ],
       bags: [BAG_CATALOG[7], BAG_CATALOG[2], BAG_CATALOG[8]],
-      followUpNote:
-        "Wear the Crystal Tabby when you want every light to find you, or the Kisslock when you want vintage frame polish.",
       options: STATEMENT_FOLLOW_UP_OPTIONS,
     };
   }
@@ -629,8 +613,6 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
         "For an unexpected twist, look to rich oxblood tones and archival silhouettes — deep cherry leather and woven jacquard feel collected rather than predictable.",
       ],
       bags: [BAG_CATALOG[4], BAG_CATALOG[3], BAG_CATALOG[5]],
-      followUpNote:
-        "The Chelsea 30 in Dark Cherry brings moody depth, while the Belted Ergo 26 adds heritage texture.",
       options: [
         "Which is best for going out?",
         "More with gold hardware",
@@ -645,8 +627,6 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
         "Warm brass hardware gives structured leather an unmistakable Coach signature — bold enough to read as jewelry against a minimalist coat or dress.",
       ],
       bags: [BAG_CATALOG[0], BAG_CATALOG[2], BAG_CATALOG[1]],
-      followUpNote:
-        "Tabby 26 showcases our sculpted Signature C clasp, while Juliet 25 pairs brass links with playful charms.",
       options: [
         "Which is best for going out?",
         "Show me something more unexpected",
@@ -661,8 +641,6 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
         "From these 172 handbags, here are the three most-loved shoulder silhouettes balancing everyday ease with signature Coach craft.",
       ],
       bags: [BAG_CATALOG[0], BAG_CATALOG[5], BAG_CATALOG[4]],
-      followUpNote:
-        "Prefer a structured flap like the Tabby, or an easy drape like the Brooklyn 28?",
       options: [
         "Show me something that makes a statement",
         "Which is best for going out?",
@@ -677,8 +655,6 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
         "Tell me what you're wearing — denim and a trench, tailored suiting, or an evening slip — or start with one of these versatile statement shapes.",
       ],
       bags: [BAG_CATALOG[1], BAG_CATALOG[2], BAG_CATALOG[4]],
-      followUpNote:
-        "Warm maple and dark cherry pair effortlessly with cream, navy, and black wardrobes.",
       options: [
         "Which is best for going out?",
         "Show me something that makes a statement",
@@ -714,14 +690,13 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
     };
   }
 
-  // Canonical Figma "statement" reply (also default for free-typed prompts & gift starter)
+  // Canonical Figma "statement" reply — chat 22 (also default for free-typed prompts & gift starter)
   return {
     leadParagraphs: [
-      "Statement bags come down to the details. Pick one that feels like you and let it carry the look.",
+      "Statement styles come down to the details: Signature print, an archival kisslock, a color with real depth.",
+      "Pair one with something simple and it carries the whole look.",
     ],
     bags: STATEMENT_CAROUSEL_BAGS,
-    followUpNote:
-      "Reach for the Juliet when you want quilted texture and charm detail. Wear the Tabby when you want every light to find you. Choose the Kisslock when you want a polished, vintage-inspired look.",
     options: STATEMENT_FOLLOW_UP_OPTIONS,
   };
 }

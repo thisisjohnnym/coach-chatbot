@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   CONTENT_SPOT_AD_LAYOUT,
   DEFAULT_RECENT_COMPARE_BAGS,
+  STATEMENT_CAROUSEL_BAGS,
   getCompareSpotCopy,
   getContentSpotAdCopy,
   type BagProduct,
@@ -174,74 +175,53 @@ function PromptCardsAdBody({
   onOpenAssistant: (mode: ContentSpotMode, prompt?: string) => void;
 }) {
   const adCopy = getContentSpotAdCopy(mode, recentComparePair);
+  // Figma assistant ad 2219:49477 shows two floating prompt bubbles over the portrait.
+  const floatingPrompts = adCopy.prompts.slice(0, 2);
+  // Figma bag was a placeholder — lifestyle for general; scenario bag otherwise.
+  const heroImage =
+    mode === "general"
+      ? {
+          src: "/assets/figma/ad-model.png",
+          alt: "Model holding Coach handbag",
+        }
+      : mode === "compare"
+        ? {
+            src: recentComparePair[0].image,
+            alt: recentComparePair[0].name,
+          }
+        : {
+            src: STATEMENT_CAROUSEL_BAGS[0].image,
+            alt: STATEMENT_CAROUSEL_BAGS[0].name,
+          };
   const promptMotionKey =
     mode === "compare"
       ? `prompts-compare-${recentComparePair[0].id}-${recentComparePair[1].id}`
       : `prompts-${mode}`;
 
-  // Updated Figma 2201:23482 — column stack: headline → portrait+cards → Ask Coach AI
   return (
-    <LayerGrid className="w-full overflow-hidden">
-      <Layer className="w-full overflow-hidden pointer-events-none">
-        {/* h-0 min-h-full: fill the stack cell without the PNG intrinsic height blowing up the ad */}
+    <LayerGrid className="w-full h-482 overflow-hidden">
+      <Layer className="w-full h-482 pointer-events-none">
         <img
-          src="/assets/figma/ad-prompts-bg.png"
+          src="/assets/figma/ad-bg.png"
           alt=""
-          className="w-full h-0 min-h-full object-cover"
+          className="w-full h-482 object-cover"
         />
       </Layer>
 
-      <Layer className="flex flex-col items-center gap-21 px-10 py-30 z-10">
+      <Layer className="flex flex-col items-center justify-between px-20 py-30 h-482 z-10">
         <h2 className="w-full max-w-306 text-center text-title text-ink-inverse tracking-sm text-balance m-0">
           {adCopy.headlineLines[0]}
           <br />
           {adCopy.headlineLines[1]}
         </h2>
 
-        <LayerGrid className="w-full max-w-410 h-201 overflow-hidden">
-          <Layer className="flex justify-center h-201 pointer-events-none">
-            <LayerGrid className="w-346 max-w-full h-201 bg-surface-portrait overflow-hidden">
-              <img
-                src="/assets/figma/ad-model-wide.png"
-                alt="Model holding Coach handbag"
-                // design-system-escape: Figma crop anchors model slightly left of center in the 346×201 clip
-                className="stack-cell w-full h-201 max-w-none object-cover object-[42%_42%] pointer-events-none"
-              />
-            </LayerGrid>
-          </Layer>
-
-          <Layer className="flex items-start justify-center pt-27 h-201 z-10">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={promptMotionKey}
-                variants={blurScaleVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="w-full flex flex-row gap-10 items-stretch"
-              >
-                {adCopy.prompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    onClick={() => onOpenAssistant(mode, prompt)}
-                    className="flex-1 min-w-0 min-h-174 bg-surface border border-border-glass rounded-tile p-13 flex flex-col justify-between gap-30 text-left shadow-bubble press-scale motion-reduce:transition-none"
-                  >
-                    <img
-                      src="/assets/figma/sparkle-ad-card.svg"
-                      alt=""
-                      width={20}
-                      height={20}
-                      className="w-20 h-20 shrink-0"
-                    />
-                    <span className="text-body text-ink tracking-xs text-balance">
-                      {prompt}
-                    </span>
-                  </button>
-                ))}
-              </motion.div>
-            </AnimatePresence>
-          </Layer>
+        <LayerGrid className="w-213 h-296 bg-surface-portrait overflow-hidden pointer-events-none">
+          <img
+            key={heroImage.src}
+            src={heroImage.src}
+            alt={heroImage.alt}
+            className="stack-cell w-213 h-296 object-cover"
+          />
         </LayerGrid>
 
         <Cluster className="justify-center">
@@ -249,7 +229,7 @@ function PromptCardsAdBody({
             type="button"
             data-spot-cta="true"
             onClick={() => onOpenAssistant(mode)}
-            className="bg-surface text-ink rounded-pill px-14 py-10 flex flex-row items-center gap-4 shadow-bubble press-scale"
+            className="bg-surface text-ink rounded-pill p-10 flex flex-row items-center gap-4 press-scale motion-reduce:transition-none"
           >
             <img
               src="/assets/figma/sparkle-black.svg"
@@ -263,6 +243,60 @@ function PromptCardsAdBody({
             </span>
           </button>
         </Cluster>
+      </Layer>
+
+      <Layer className="pointer-events-none w-full h-482 z-20">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={promptMotionKey}
+            variants={blurScaleVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className={
+              // layout-relative-needed: Figma 2219:49477 pins prompt bubbles over the portrait
+              "relative w-full h-482 pointer-events-auto"
+            }
+          >
+            {floatingPrompts[0] && (
+              <button
+                type="button"
+                onClick={() => onOpenAssistant(mode, floatingPrompts[0])}
+                className="absolute left-20 top-148 w-181 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale motion-reduce:transition-none"
+              >
+                <img
+                  src="/assets/figma/sparkle-black.svg"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="w-16 h-16 shrink-0"
+                />
+                <span className="w-165 text-caption text-ink tracking-xs text-balance">
+                  {floatingPrompts[0]}
+                </span>
+              </button>
+            )}
+
+            {floatingPrompts[1] && (
+              <button
+                type="button"
+                onClick={() => onOpenAssistant(mode, floatingPrompts[1])}
+                className="absolute left-232 top-220 w-181 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale motion-reduce:transition-none"
+              >
+                <img
+                  src="/assets/figma/sparkle-black.svg"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="w-16 h-16 shrink-0"
+                />
+                <span className="w-165 text-caption text-ink tracking-xs text-balance">
+                  {floatingPrompts[1]}
+                </span>
+              </button>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </Layer>
     </LayerGrid>
   );

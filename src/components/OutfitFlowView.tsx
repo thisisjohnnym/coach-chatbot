@@ -305,18 +305,6 @@ export function OutfitTurnItem({
                       <span className="text-micro text-ink-inverse">
                         Coach AI
                       </span>
-                      <Stack className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble gap-10">
-                        {OUTFIT_MATCH_REPLY.leadParagraphs.map(
-                          (paragraph, idx) => (
-                            <p
-                              key={idx}
-                              className="text-caption text-ink tracking-xs text-pretty m-0"
-                            >
-                              {paragraph}
-                            </p>
-                          ),
-                        )}
-                      </Stack>
                     </motion.div>
 
                     {OUTFIT_MATCH_REPLY.bags &&
@@ -365,18 +353,30 @@ export function OutfitTurnItem({
                         </motion.div>
                       )}
 
+                    {OUTFIT_MATCH_REPLY.leadParagraphs.length > 0 && (
+                      <motion.div
+                        variants={blurScaleVariants}
+                        className="flex flex-col gap-5 items-start max-w-full min-w-0"
+                      >
+                        <Stack className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble gap-10">
+                          {OUTFIT_MATCH_REPLY.leadParagraphs.map(
+                            (paragraph, idx) => (
+                              <p
+                                key={idx}
+                                className="text-caption text-ink tracking-xs text-pretty m-0"
+                              >
+                                {paragraph}
+                              </p>
+                            ),
+                          )}
+                        </Stack>
+                      </motion.div>
+                    )}
+
                     <motion.div
                       variants={blurScaleVariants}
                       className="flex flex-col gap-12 items-start max-w-full min-w-0"
                     >
-                      {OUTFIT_MATCH_REPLY.followUpNote && (
-                        <Box className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble text-caption text-ink tracking-xs text-pretty">
-                          <p className="m-0">
-                            {OUTFIT_MATCH_REPLY.followUpNote}
-                          </p>
-                        </Box>
-                      )}
-
                       <Cluster className="gap-10 pt-2">
                         <span className="text-micro text-ink-inverse">
                           How was my answer?
