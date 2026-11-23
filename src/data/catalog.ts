@@ -242,11 +242,11 @@ export interface ContentSpotAdCopy {
   prompts: string[];
 }
 
-/** Updated Figma ad prompts (node 2201:23482). */
+/** Shoulder Bag content-spot ad prompts (Kelcie Mohr copy, Nov 2026). */
 export const PROMPTED_AD_PROMPTS = [
-  "Which is best for going out?",
-  "Show me something more unexpected",
-  "More with gold hardware",
+  "Show me something that makes a statement",
+  "Perfect everyday go-to's",
+  "Match my going-out look",
 ] as const;
 
 export function getContentSpotAdCopy(
