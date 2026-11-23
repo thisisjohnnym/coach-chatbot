@@ -5,7 +5,7 @@ import {
   motion,
   type TargetAndTransition,
 } from "motion/react";
-import type { BagProduct } from "../data/catalog";
+import { COMPARE_LOADING_COPY, type BagProduct } from "../data/catalog";
 import {
   DURATION_ENTER,
   EASE_PREMIUM,
@@ -28,7 +28,10 @@ export type CompareStage =
   | "compared";
 
 export type CompareConfirmOption = "compare-choices" | "something-else";
-export type CompareFollowUpOption = "compare-features" | "something-else";
+export type CompareFollowUpOption =
+  | "compare-features"
+  | "how-to-wear"
+  | "something-else";
 
 export interface CompareThreadTurn {
   kind: "compare";
@@ -37,6 +40,7 @@ export interface CompareThreadTurn {
   showUserBubble: boolean;
   showCompareIcon?: boolean;
   prefilledFromRecent?: boolean;
+  loadingMessage?: string;
   anchorChoiceGroupKey?: string;
   mode: "interactive-slots" | "direct-pair";
   stage: CompareStage;
@@ -109,8 +113,13 @@ export function CompareTurnItem({
     turn.confirmSelectedOptions.includes("something-else");
   const isCompareFeaturesActive =
     turn.followUpSelectedOptions.includes("compare-features");
+  const isFollowUpHowToWearActive =
+    turn.followUpSelectedOptions.includes("how-to-wear");
   const isFollowUpSomethingElseActive =
     turn.followUpSelectedOptions.includes("something-else");
+  const loadingMessage =
+    turn.loadingMessage ??
+    (turn.prefilledFromRecent ? COMPARE_LOADING_COPY : "Loading tools");
 
   useEffect(() => {
     if (
@@ -338,7 +347,7 @@ export function CompareTurnItem({
           >
             <span className="text-micro text-ink-inverse">Coach AI</span>
             <Box className="w-212 max-w-full bg-surface p-8 rounded-bubble shadow-bubble text-caption text-ink tracking-xs">
-              Loading tools
+              {loadingMessage}
             </Box>
             <Box
               role="status"
@@ -838,11 +847,15 @@ export function CompareTurnItem({
                           </button>
                           <button
                             type="button"
-                            aria-pressed={isFollowUpSomethingElseActive}
+                            aria-pressed={
+                              isFollowUpHowToWearActive ||
+                              isFollowUpSomethingElseActive
+                            }
                             onClick={() => onFollowUpSomethingElse(turn.id)}
                             className={clsx(
                               "flex-1 min-w-0 p-13 rounded-tile border border-border-glass flex flex-col justify-between gap-24 text-left press-scale motion-reduce:transition-none",
-                              isFollowUpSomethingElseActive
+                              isFollowUpHowToWearActive ||
+                                isFollowUpSomethingElseActive
                                 ? "bg-surface text-ink"
                                 : "bg-surface-tile hover:bg-surface-tile-hover text-ink-inverse",
                             )}
@@ -854,12 +867,13 @@ export function CompareTurnItem({
                               height={20}
                               className={clsx(
                                 "w-20 h-20 shrink-0 transition-icon-invert motion-reduce:transition-none",
-                                isFollowUpSomethingElseActive &&
+                                (isFollowUpHowToWearActive ||
+                                  isFollowUpSomethingElseActive) &&
                                   "invert scale-105",
                               )}
                             />
                             <span className="text-body tracking-xs leading-snug">
-                              Help me with something else
+                              Show me how to wear it
                             </span>
                           </button>
                         </Box>

@@ -10,12 +10,16 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import clsx from "clsx";
 import {
+  COMPARE_LOADING_COPY,
+  COMPARE_TABBYS_PROMPT,
   DEFAULT_RECENT_COMPARE_BAGS,
   findMentionedBagsInPrompt,
   getCannedReplyForPrompt,
   getCompareSpotCopy,
+  HOW_TO_WEAR_PROMPT,
   OUTFIT_STARTER_PROMPT,
   STATEMENT_PROMPT,
+  UGC_PLAY_PROMPT,
   type BagProduct,
   type ContentSpotMode,
   type StarterAction,
@@ -358,6 +362,7 @@ export function App() {
       showUserBubble?: boolean;
       showCompareIcon?: boolean;
       prefilledFromRecent?: boolean;
+      loadingMessage?: string;
       interactionMode?: "interactive-slots" | "direct-pair";
       anchorChoiceGroupKey?: string;
       fromColdStart: boolean;
@@ -372,6 +377,7 @@ export function App() {
         showUserBubble = true,
         showCompareIcon,
         prefilledFromRecent = false,
+        loadingMessage,
         interactionMode,
         anchorChoiceGroupKey,
         fromColdStart,
@@ -398,6 +404,9 @@ export function App() {
         showUserBubble,
         showCompareIcon,
         prefilledFromRecent,
+        loadingMessage:
+          loadingMessage ??
+          (prefilledFromRecent ? COMPARE_LOADING_COPY : undefined),
         anchorChoiceGroupKey,
         mode: resolvedMode,
         stage: isDirectPair ? "compared" : "loading",
@@ -684,7 +693,7 @@ export function App() {
   );
 
   const handleOpenFromContentSpot = useCallback(
-    (mode: ContentSpotMode) => {
+    (mode: ContentSpotMode, prompt?: string) => {
       clearPendingTimers();
       closingSheetRef.current = false;
       isTypingFocusedRef.current = false;
@@ -696,6 +705,43 @@ export function App() {
       setCraftSessionId((s) => s + 1);
       setOrbBloomKey((k) => k + 1);
       setFloatingVisible(false);
+
+      const trimmedPrompt = prompt?.trim();
+
+      if (trimmedPrompt) {
+        const lower = trimmedPrompt.toLowerCase();
+        const isComparePrompt =
+          mode === "compare" &&
+          (lower === COMPARE_TABBYS_PROMPT.toLowerCase() ||
+            lower.startsWith("compare "));
+
+        if (isComparePrompt) {
+          const compareCopy = getCompareSpotCopy(recentlyViewedBags);
+          enqueueCompareTurn({
+            replaceThread: true,
+            userPrompt: trimmedPrompt,
+            showUserBubble: true,
+            showCompareIcon: true,
+            prefilledFromRecent: true,
+            loadingMessage: compareCopy.assistantPreview,
+            interactionMode: "interactive-slots",
+            fromColdStart: false,
+            openingSheetNow: true,
+            withThinkingOrb: true,
+            preselectedA: recentlyViewedBags[0],
+            preselectedB: recentlyViewedBags[1],
+          });
+          return;
+        }
+
+        submitPrompt(trimmedPrompt, {
+          replaceThread: true,
+          fromColdStart: false,
+          openingSheetNow: true,
+          withThinkingOrb: true,
+        });
+        return;
+      }
 
       if (mode === "prompted") {
         submitPrompt(STATEMENT_PROMPT, {
@@ -712,6 +758,7 @@ export function App() {
           showUserBubble: true,
           showCompareIcon: true,
           prefilledFromRecent: true,
+          loadingMessage: compareCopy.assistantPreview,
           interactionMode: "interactive-slots",
           fromColdStart: false,
           openingSheetNow: true,
@@ -1192,6 +1239,7 @@ export function App() {
       const targetTurn = turns[targetIdx];
       if (
         targetTurn.kind !== "compare" ||
+        targetTurn.followUpSelectedOptions.includes("how-to-wear") ||
         targetTurn.followUpSelectedOptions.includes("something-else")
       ) {
         return;
@@ -1203,15 +1251,33 @@ export function App() {
           t.id === turnId && t.kind === "compare"
             ? {
                 ...t,
-                followUpSelectedOptions: [...t.followUpSelectedOptions, "something-else" as const],
+                followUpSelectedOptions: [
+                  ...t.followUpSelectedOptions,
+                  "how-to-wear" as const,
+                ],
               }
             : t
         )
       );
-      submitPrompt("Help me with something else", {
+      submitPrompt(HOW_TO_WEAR_PROMPT, {
         replaceThread: false,
         showUserBubble: hasTurnsBelow,
         anchorChoiceGroupKey: `${turnId}:followup`,
+        fromColdStart: true,
+        withThinkingOrb: false,
+      });
+    },
+    [submitPrompt, turns]
+  );
+
+  const handleSelectUgcClip = useCallback(
+    (turnId: string, _clipId: string) => {
+      const targetIdx = turns.findIndex((t) => t.id === turnId);
+      const hasTurnsBelow = targetIdx !== -1 && targetIdx < turns.length - 1;
+
+      submitPrompt(UGC_PLAY_PROMPT, {
+        replaceThread: false,
+        showUserBubble: hasTurnsBelow,
         fromColdStart: true,
         withThinkingOrb: false,
       });
@@ -1482,6 +1548,7 @@ export function App() {
                             sheetOpenStagger={isInitialOpenStagger}
                             bagIdsInCart={bagIdsInCart}
                             onSelectOption={handleSelectTurnOption}
+                            onSelectUgcClip={handleSelectUgcClip}
                             onFeedback={handleTurnFeedback}
                             onInspectBag={handleInspectBagFromCarousel}
                             onToggleBagItem={handleToggleBagItem}

@@ -23,7 +23,7 @@ export interface PlpListingProps {
   storiesPaused?: boolean;
   bagCount?: number;
   recentComparePair?: [BagProduct, BagProduct];
-  onOpenAssistant: (mode: ContentSpotMode) => void;
+  onOpenAssistant: (mode: ContentSpotMode, prompt?: string) => void;
   onTriggerStoriesAction?: (action: StoriesSpotAction) => void;
   onDismissContentSpot: () => void;
   onSelectBagFromGrid?: (bag: BagProduct) => void;

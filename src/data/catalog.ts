@@ -143,6 +143,42 @@ export const BAG_CATALOG: BagProduct[] = [
         "The Tabby Chain Crossbody 19 distills our structured Signature C hardware into a compact leather silhouette with a gleaming detachable chain.",
     },
   },
+  {
+    id: "tabby-26-crystal",
+    name: "Tabby Shoulder Bag 26 in Crystal Signature Jacquard",
+    shortName: "Tabby 26 Crystal",
+    price: 495,
+    priceFormatted: "$495",
+    image: "/assets/figma/bag-tabby-26-crystal.jpg",
+    category: "top",
+    specs: {
+      style: "Structured icon",
+      size: "Medium",
+      carry: "Shoulder + Crossbody",
+      bestFor: "Going out / Statement",
+      color: "Crystal Signature Jacquard",
+      summaryNote:
+        "The Tabby 26 in Crystal Signature Jacquard catches every light with shimmering C motifs and our sculpted Signature clasp.",
+    },
+  },
+  {
+    id: "kisslock-30",
+    name: "Kisslock Frame Bag 30 in Dark Cherry",
+    shortName: "Kisslock 30",
+    price: 450,
+    priceFormatted: "$450",
+    image: "/assets/figma/bag-kisslock-30.jpg",
+    category: "trending",
+    specs: {
+      style: "Frame clutch",
+      size: "Medium",
+      carry: "Shoulder + Frame",
+      bestFor: "Evenings / Vintage polish",
+      color: "Dark Cherry",
+      summaryNote:
+        "The Kisslock Frame Bag 30 in Dark Cherry brings polished, vintage-inspired structure with a gleaming gold kisslock closure.",
+    },
+  },
 ];
 
 export const DEFAULT_RECENT_COMPARE_BAGS: [BagProduct, BagProduct] = [
@@ -172,11 +208,80 @@ export const PLP_COMPARE_ROWS: [BagProduct, BagProduct][] = [
 
 export const STATEMENT_CAROUSEL_BAGS: BagProduct[] = [
   BAG_CATALOG[2], // Juliet Shoulder Bag 25 ($525)
-  BAG_CATALOG[0], // Tabby Shoulder Bag 26 ($475)
-  BAG_CATALOG[4], // Chelsea Shoulder Bag 30 ($325)
+  BAG_CATALOG[7], // Tabby 26 Crystal Signature Jacquard ($495)
+  BAG_CATALOG[8], // Kisslock Frame Bag 30 Dark Cherry ($450)
 ];
 
+/** Flip to `"demo-chat"` to restore the floating bubble ad layout. */
+export type ContentSpotAdLayout = "prompts" | "demo-chat";
+export const CONTENT_SPOT_AD_LAYOUT: ContentSpotAdLayout = "prompts";
+
 export type ContentSpotMode = "general" | "prompted" | "compare";
+
+export const STATEMENT_PROMPT = "Show me something that makes a statement";
+export const COMPARE_TABBYS_PROMPT = "Compare the Tabbys I viewed";
+export const COMPARE_LOADING_COPY = "Comparing side by side...";
+export const HOW_TO_WEAR_PROMPT = "Show me how to wear it";
+export const UGC_PLAY_PROMPT = "Play this look";
+
+export const STATEMENT_FOLLOW_UP_OPTIONS = [
+  "Which is best for going-out?",
+  "Show me something more unexpected",
+  "More with sparkle",
+];
+
+export const STUB_FOLLOW_UP_OPTIONS = [
+  "Show me something that makes a statement",
+  "Which is best for going-out?",
+  "More with sparkle",
+];
+
+export interface ContentSpotAdCopy {
+  /** Two-line headline as authored in Figma. */
+  headlineLines: [string, string];
+  prompts: string[];
+}
+
+/** Updated Figma ad prompts (node 2201:23482). */
+export const PROMPTED_AD_PROMPTS = [
+  "Which is best for going out?",
+  "Show me something more unexpected",
+  "More with gold hardware",
+] as const;
+
+export function getContentSpotAdCopy(
+  mode: ContentSpotMode,
+  recentPair: [BagProduct, BagProduct] = DEFAULT_RECENT_COMPARE_BAGS
+): ContentSpotAdCopy {
+  if (mode === "compare") {
+    const [bagA, bagB] = recentPair;
+    const bothTabby =
+      bagA.name.toLowerCase().includes("tabby") &&
+      bagB.name.toLowerCase().includes("tabby");
+
+    return {
+      headlineLines: bothTabby
+        ? ["Torn between two Tabbys?", "Just ask."]
+        : ["Torn between two styles?", "Just ask."],
+      prompts: bothTabby
+        ? [
+            COMPARE_TABBYS_PROMPT,
+            "Show me what fits inside",
+            "Can I wear as a crossbody?",
+          ]
+        : [
+            `Compare the ${bagA.shortName} and ${bagB.shortName} I viewed`,
+            "Show me what fits inside",
+            "Can I wear as a crossbody?",
+          ],
+    };
+  }
+
+  return {
+    headlineLines: ["Still looking for", "the one? Just ask."],
+    prompts: [...PROMPTED_AD_PROMPTS],
+  };
+}
 
 export function getCompareSpotCopy(recentPair: [BagProduct, BagProduct]): {
   userPrompt: string;
@@ -189,11 +294,35 @@ export function getCompareSpotCopy(recentPair: [BagProduct, BagProduct]): {
 
   return {
     userPrompt: bothTabby
-      ? "Compare Tabby bags"
+      ? COMPARE_TABBYS_PROMPT
       : `Compare ${bagA.shortName} and ${bagB.shortName}`,
-    assistantPreview: `Pulling up ${bagA.shortName} and ${bagB.shortName} to compare side by side`,
+    assistantPreview: COMPARE_LOADING_COPY,
   };
 }
+
+export interface UgcClip {
+  id: string;
+  image: string;
+  alt: string;
+}
+
+export const HOW_TO_WEAR_UGC_CLIPS: UgcClip[] = [
+  {
+    id: "ugc-tabby-1",
+    image: "/assets/figma/ugc-tabby-1.jpg",
+    alt: "Tabby bag styled in a UGC clip",
+  },
+  {
+    id: "ugc-tabby-2",
+    image: "/assets/figma/ugc-tabby-2.jpg",
+    alt: "Tabby bag on a counter in a UGC clip",
+  },
+  {
+    id: "ugc-tabby-3",
+    image: "/assets/figma/ugc-tabby-3.jpg",
+    alt: "Crystal Tabby bag in a UGC clip",
+  },
+];
 
 export interface StarterAction {
   id: "narrow" | "outfit" | "compare" | "gift";
@@ -234,10 +363,9 @@ export interface CannedReply {
   bags?: BagProduct[];
   featuredBag?: BagProduct;
   followUpNote?: string;
+  ugcClips?: UgcClip[];
   options?: string[];
 }
-
-export const STATEMENT_PROMPT = "Show me something that makes a statement";
 
 export const OUTFIT_STARTER_PROMPT = "Match a bag to my outfit";
 
@@ -315,6 +443,8 @@ export function findMentionedBagsInPrompt(prompt: string): BagProduct[] {
     const keywordAliases: Array<{ bag: BagProduct; keyword: string }> = [
       { bag: BAG_CATALOG[6], keyword: "chain crossbody" },
       { bag: BAG_CATALOG[6], keyword: "tabby 19" },
+      { bag: BAG_CATALOG[7], keyword: "crystal" },
+      { bag: BAG_CATALOG[8], keyword: "kisslock" },
       { bag: BAG_CATALOG[1], keyword: "soft tabby" },
       { bag: BAG_CATALOG[3], keyword: "ergo" },
       { bag: BAG_CATALOG[2], keyword: "juliet" },
@@ -338,6 +468,78 @@ export function findMentionedBagsInPrompt(prompt: string): BagProduct[] {
 
 export function getCannedReplyForPrompt(prompt: string): CannedReply {
   const lower = prompt.toLowerCase();
+
+  if (lower === UGC_PLAY_PROMPT.toLowerCase() || lower.includes("feature coming soon")) {
+    return {
+      leadParagraphs: [
+        "Feature coming soon — wear videos and UGC playback are on the way.",
+      ],
+      options: [
+        "Which is best for going-out?",
+        "Show me something more unexpected",
+        "Compare two bags",
+      ],
+    };
+  }
+
+  if (lower.includes("how to wear")) {
+    return {
+      leadParagraphs: [
+        "Here’s how people are wearing these styles right now — tap a clip for the full video experience.",
+      ],
+      ugcClips: HOW_TO_WEAR_UGC_CLIPS,
+      options: [
+        "Which is best for going-out?",
+        "Show me something more unexpected",
+        "More with sparkle",
+      ],
+    };
+  }
+
+  if (
+    lower.includes("everyday go-to") ||
+    lower.includes("everyday go to") ||
+    lower.includes("go-to's") ||
+    lower.includes("go-tos")
+  ) {
+    return {
+      leadParagraphs: [
+        "Everyday go-tos are coming into focus — this path is still a stub while we lock the final edit.",
+      ],
+      bags: [BAG_CATALOG[5], BAG_CATALOG[1], BAG_CATALOG[0]],
+      options: STUB_FOLLOW_UP_OPTIONS,
+    };
+  }
+
+  if (lower.includes("match my going-out") || lower.includes("match my going out")) {
+    return {
+      leadParagraphs: [
+        "Going-out matches are coming into focus — this path is still a stub while we lock the final edit.",
+      ],
+      bags: [BAG_CATALOG[2], BAG_CATALOG[7], BAG_CATALOG[8]],
+      options: STUB_FOLLOW_UP_OPTIONS,
+    };
+  }
+
+  if (lower.includes("fits inside") || lower.includes("what fits")) {
+    return {
+      leadParagraphs: [
+        "Capacity details are coming soon — this path is still a stub while we lock the final edit.",
+      ],
+      bags: [BAG_CATALOG[0], BAG_CATALOG[6], BAG_CATALOG[1]],
+      options: STUB_FOLLOW_UP_OPTIONS,
+    };
+  }
+
+  if (lower.includes("wear as a crossbody") || lower.includes("as a crossbody")) {
+    return {
+      leadParagraphs: [
+        "Crossbody wear tips are coming soon — this path is still a stub while we lock the final edit.",
+      ],
+      bags: [BAG_CATALOG[0], BAG_CATALOG[6], BAG_CATALOG[1]],
+      options: STUB_FOLLOW_UP_OPTIONS,
+    };
+  }
 
   if (lower.startsWith("tell me more about") || lower.startsWith("tell me about ")) {
     const mentioned = findMentionedBagsInPrompt(prompt);
@@ -393,7 +595,7 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
     };
   }
 
-  if (lower.includes("going out")) {
+  if (lower.includes("going out") || lower.includes("going-out")) {
     return {
       leadParagraphs: [
         "For evenings out, the Juliet 25 is your standout piece — quilted leather and removable chain charms catch every light without weighing you down.",
@@ -404,8 +606,20 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
       options: [
         "Compare Juliet 25 and Tabby 26",
         "Show me something more unexpected",
-        "More with gold hardware",
+        "More with sparkle",
       ],
+    };
+  }
+
+  if (lower.includes("sparkle") || lower.includes("crystal")) {
+    return {
+      leadParagraphs: [
+        "For sparkle with substance, Crystal Signature Jacquard and polished hardware turn evening light into the whole look.",
+      ],
+      bags: [BAG_CATALOG[7], BAG_CATALOG[2], BAG_CATALOG[8]],
+      followUpNote:
+        "Wear the Crystal Tabby when you want every light to find you, or the Kisslock when you want vintage frame polish.",
+      options: STATEMENT_FOLLOW_UP_OPTIONS,
     };
   }
 
@@ -503,16 +717,11 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
   // Canonical Figma "statement" reply (also default for free-typed prompts & gift starter)
   return {
     leadParagraphs: [
-      "Statement styles come down to the details: Signature print, an archival kisslock, a color with real depth.",
-      "Pair one with something simple and it carries the whole look.",
+      "Statement bags come down to the details. Pick one that feels like you and let it carry the look.",
     ],
     bags: STATEMENT_CAROUSEL_BAGS,
     followUpNote:
-      "Wear the Tabby when you want every light to find you. Reach for the Juliet 25 when you want quilted texture and charm detail. Choose the Chelsea when you want to keep it moody in dark cherry.",
-    options: [
-      "Which is best for going out?",
-      "Show me something more unexpected",
-      "More with gold hardware",
-    ],
+      "Reach for the Juliet when you want quilted texture and charm detail. Wear the Tabby when you want every light to find you. Choose the Kisslock when you want a polished, vintage-inspired look.",
+    options: STATEMENT_FOLLOW_UP_OPTIONS,
   };
 }

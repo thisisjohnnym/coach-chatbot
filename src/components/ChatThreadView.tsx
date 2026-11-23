@@ -63,6 +63,7 @@ export interface ChatThreadViewProps {
   sheetOpenStagger?: boolean;
   bagIdsInCart?: string[];
   onSelectOption: (turnId: string, option: string) => void;
+  onSelectUgcClip?: (turnId: string, clipId: string) => void;
   onFeedback: (turnId: string, vote: "up" | "down") => void;
   onInspectBag?: (bag: BagProduct) => void;
   onToggleBagItem?: (bag: BagProduct) => void;
@@ -110,6 +111,7 @@ export function ChatThreadView({
   sheetOpenStagger = false,
   bagIdsInCart = [],
   onSelectOption,
+  onSelectUgcClip,
   onFeedback,
   onInspectBag,
   onToggleBagItem,
@@ -667,6 +669,48 @@ export function ChatThreadView({
                                   {bag.priceFormatted}
                                 </p>
                               </Stack>
+                            </motion.button>
+                          ))}
+                        </motion.div>
+                      )}
+
+                      {turn.reply.ugcClips && turn.reply.ugcClips.length > 0 && (
+                        <motion.div
+                          variants={staggerCardsVariants}
+                          className="flex flex-row gap-8 w-full min-w-0 overflow-x-auto no-scrollbar py-2"
+                        >
+                          {turn.reply.ugcClips.map((clip) => (
+                            <motion.button
+                              key={clip.id}
+                              type="button"
+                              variants={blurScaleVariants}
+                              aria-label={`Play ${clip.alt}`}
+                              onClick={() =>
+                                onSelectUgcClip?.(turn.id, clip.id)
+                              }
+                              className="w-132 shrink-0 rounded-card overflow-hidden press-scale motion-reduce:transition-none shadow-bubble"
+                            >
+                              <LayerGrid className="w-full aspect-picker-card bg-surface-muted overflow-hidden">
+                                <img
+                                  src={clip.image}
+                                  alt={clip.alt}
+                                  className="stack-cell w-full h-full object-cover"
+                                />
+                                <img
+                                  src="/assets/figma/icon-play-overlay.svg"
+                                  alt=""
+                                  width={36}
+                                  height={36}
+                                  className="stack-cell self-center justify-self-center w-36 h-36 pointer-events-none"
+                                />
+                                <img
+                                  src="/assets/figma/icon-tiktok.svg"
+                                  alt=""
+                                  width={18}
+                                  height={18}
+                                  className="stack-cell self-start justify-self-end w-18 h-18 m-8 pointer-events-none"
+                                />
+                              </LayerGrid>
                             </motion.button>
                           ))}
                         </motion.div>
