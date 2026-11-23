@@ -17,7 +17,8 @@ export interface ContentSpotAdProps {
   dismissed: boolean;
   recentComparePair?: [BagProduct, BagProduct];
   onOpenAssistant: (mode: ContentSpotMode, prompt?: string) => void;
-  onDismiss: () => void;
+  /** @deprecated Dismiss control removed from the ad UI. */
+  onDismiss?: () => void;
 }
 
 function DemoChatAdBody({
@@ -253,16 +254,13 @@ function PromptCardsAdBody({
             initial="hidden"
             animate="visible"
             exit="exit"
-            className={
-              // layout-relative-needed: Figma 2219:49477 pins prompt bubbles over the portrait
-              "relative w-full h-482 pointer-events-auto"
-            }
+            className="w-full h-482 px-20 pt-148 pointer-events-none flex flex-row items-start justify-between gap-12"
           >
             {floatingPrompts[0] && (
               <button
                 type="button"
                 onClick={() => onOpenAssistant(mode, floatingPrompts[0])}
-                className="absolute left-20 top-148 w-181 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale motion-reduce:transition-none"
+                className="pointer-events-auto flex-1 min-w-0 max-w-181 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale motion-reduce:transition-none"
               >
                 <img
                   src="/assets/figma/sparkle-black.svg"
@@ -271,7 +269,7 @@ function PromptCardsAdBody({
                   height={16}
                   className="w-16 h-16 shrink-0"
                 />
-                <span className="w-165 text-caption text-ink tracking-xs text-balance">
+                <span className="w-full text-caption text-ink tracking-xs text-balance">
                   {floatingPrompts[0]}
                 </span>
               </button>
@@ -281,7 +279,7 @@ function PromptCardsAdBody({
               <button
                 type="button"
                 onClick={() => onOpenAssistant(mode, floatingPrompts[1])}
-                className="absolute left-232 top-220 w-181 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale motion-reduce:transition-none"
+                className="pointer-events-auto flex-1 min-w-0 max-w-181 mt-72 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale motion-reduce:transition-none"
               >
                 <img
                   src="/assets/figma/sparkle-black.svg"
@@ -290,7 +288,7 @@ function PromptCardsAdBody({
                   height={16}
                   className="w-16 h-16 shrink-0"
                 />
-                <span className="w-165 text-caption text-ink tracking-xs text-balance">
+                <span className="w-full text-caption text-ink tracking-xs text-balance">
                   {floatingPrompts[1]}
                 </span>
               </button>
@@ -307,7 +305,6 @@ export function ContentSpotAd({
   dismissed,
   recentComparePair = DEFAULT_RECENT_COMPARE_BAGS,
   onOpenAssistant,
-  onDismiss,
 }: ContentSpotAdProps) {
   return (
     <Box
@@ -332,16 +329,6 @@ export function ContentSpotAd({
             onOpenAssistant={onOpenAssistant}
           />
         )}
-
-        <Cluster className="w-full pt-4 pb-8 px-10 justify-center bg-surface">
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="text-micro text-ink-muted tracking-xs underline press-scale min-h-36 px-16 flex items-center justify-center"
-          >
-            Dismiss
-          </button>
-        </Cluster>
       </Box>
     </Box>
   );

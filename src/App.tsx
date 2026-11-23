@@ -743,38 +743,14 @@ export function App() {
         return;
       }
 
-      if (mode === "prompted") {
-        submitPrompt(STATEMENT_PROMPT, {
-          replaceThread: true,
-          fromColdStart: false,
-          openingSheetNow: true,
-          withThinkingOrb: true,
-        });
-      } else if (mode === "compare") {
-        const compareCopy = getCompareSpotCopy(recentlyViewedBags);
-        enqueueCompareTurn({
-          replaceThread: true,
-          userPrompt: compareCopy.userPrompt,
-          showUserBubble: true,
-          showCompareIcon: true,
-          prefilledFromRecent: true,
-          loadingMessage: compareCopy.assistantPreview,
-          interactionMode: "interactive-slots",
-          fromColdStart: false,
-          openingSheetNow: true,
-          withThinkingOrb: true,
-          preselectedA: recentlyViewedBags[0],
-          preselectedB: recentlyViewedBags[1],
-        });
-      } else {
-        resetSeenChatTurnIds();
-        setTurns([]);
-        setEnteredFromColdStart(true);
-        setIsInitialExchange(true);
-        setIsInitialOpenStagger(true);
-        setActiveView("cold-start");
-        setSheetOpen(true);
-      }
+      // Ask Coach AI CTA (no prompt) always opens cold start.
+      resetSeenChatTurnIds();
+      setTurns([]);
+      setEnteredFromColdStart(true);
+      setIsInitialExchange(true);
+      setIsInitialOpenStagger(true);
+      setActiveView("cold-start");
+      setSheetOpen(true);
     },
     [clearPendingTimers, enqueueCompareTurn, recentlyViewedBags, submitPrompt]
   );
