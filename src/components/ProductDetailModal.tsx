@@ -79,11 +79,14 @@ export function ProductDetailModal({
         onClick={(event) => event.stopPropagation()}
         className="w-full max-w-390 max-h-modal min-w-0 min-h-0 bg-surface rounded-tile overflow-hidden flex flex-col shadow-fab"
       >
-        {/* Top bar */}
-        <Cluster className="px-14 pt-12 pb-8 justify-between gap-8 bg-surface shrink-0 min-w-0">
-          <span className="text-micro uppercase tracking-items text-ink-muted truncate">
-            Product Details
-          </span>
+        {/* Top bar — same type as product name in this overlay */}
+        <Cluster className="pt-14 pb-10 px-14 gap-8 justify-between bg-surface shrink-0 min-w-0">
+          <h3
+            id="product-detail-title"
+            className="text-subhead font-medium text-ink tracking-xs m-0 min-w-0 truncate"
+          >
+            Product details
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -101,23 +104,20 @@ export function ProductDetailModal({
 
         {/* Scrollable product body */}
         <div className="flex-1 min-h-0 min-w-0 overflow-y-auto sheet-scrollbar flex flex-col">
-          <LayerGrid className="w-full aspect-detail-hero max-h-204 bg-surface-muted overflow-hidden shrink-0">
+          <Box className="w-full bg-surface-muted shrink-0">
             <img
               src={bag.image}
               alt={bag.name}
-              className="stack-cell w-full h-full object-contain"
+              className="w-full h-auto object-contain block"
             />
-          </LayerGrid>
+          </Box>
 
           <Stack className="p-16 gap-14 bg-surface">
             <Stack className="gap-6">
               <Box className="flex flex-row items-start justify-between gap-12">
-                <h3
-                  id="product-detail-title"
-                  className="text-subhead font-medium text-ink tracking-xs text-balance m-0"
-                >
+                <h4 className="text-subhead font-medium text-ink tracking-xs text-balance m-0">
                   {bag.name}
-                </h3>
+                </h4>
                 <span className="text-subhead font-medium text-ink tabular-nums shrink-0">
                   {bag.priceFormatted}
                 </span>

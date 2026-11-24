@@ -1009,18 +1009,6 @@ export function App() {
     );
   }, []);
 
-  const handleInspectBagFromCarousel = useCallback(
-    (bag: BagProduct) => {
-      recordViewedBag(bag);
-      submitPrompt(`Tell me more about the ${bag.shortName}`, {
-        replaceThread: false,
-        fromColdStart: true,
-        withThinkingOrb: false,
-      });
-    },
-    [recordViewedBag, submitPrompt]
-  );
-
   const handleToggleBagItem = useCallback((bag: BagProduct) => {
     setBagIdsInCart((prev) =>
       prev.includes(bag.id)
@@ -1344,12 +1332,12 @@ export function App() {
           />
         </Layer>
 
-        {/* Storefront Product Detail Modal when tapping products on PLP */}
-        <Layer className="w-full h-full min-h-0 pointer-events-none isolate z-30 stack-grid grid-rows-1 overflow-hidden">
+        {/* Product quick view — full phone frame, above PLP and chat sheet */}
+        <Layer className="w-full h-full min-h-0 pointer-events-none isolate z-40 stack-grid grid-rows-1 overflow-hidden">
           <AnimatePresence>
-            {!sheetOpen && detailBag ? (
+            {detailBag ? (
               <ProductDetailModal
-                key={`plp-detail-${detailBag.id}`}
+                key={`detail-${detailBag.id}`}
                 bag={detailBag}
                 isInBag={bagIdsInCart.includes(detailBag.id)}
                 onToggleBag={handleToggleBagItem}
@@ -1405,15 +1393,6 @@ export function App() {
                     recentBags={recentlyViewedBags}
                     onPickBag={handlePickCompareBag}
                     onClose={() => setPickerTarget(null)}
-                  />
-                ) : sheetOpen && detailBag ? (
-                  <ProductDetailModal
-                    key={`detail-${detailBag.id}`}
-                    bag={detailBag}
-                    isInBag={bagIdsInCart.includes(detailBag.id)}
-                    onToggleBag={handleToggleBagItem}
-                    onCompareBag={handleCompareFromDetail}
-                    onClose={() => setDetailBag(null)}
                   />
                 ) : null
               }
@@ -1526,7 +1505,7 @@ export function App() {
                             onSelectOption={handleSelectTurnOption}
                             onSelectUgcClip={handleSelectUgcClip}
                             onFeedback={handleTurnFeedback}
-                            onInspectBag={handleInspectBagFromCarousel}
+                            onInspectBag={handleViewBagDetails}
                             onToggleBagItem={handleToggleBagItem}
                             onViewBagDetails={handleViewBagDetails}
                             onPickSelfie={handlePickSelfie}

@@ -66,23 +66,6 @@ function ProductTile({
             </motion.span>
           )}
         </AnimatePresence>
-        <button
-          type="button"
-          aria-label={`Quick add ${bag.name}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect?.(bag);
-          }}
-          className="stack-cell self-end justify-self-end w-36 h-36 flex items-center justify-center press-scale"
-        >
-          <img
-            src="/assets/figma/card-plus.svg"
-            alt=""
-            width={24}
-            height={24}
-            className="w-24 h-24"
-          />
-        </button>
       </LayerGrid>
 
       <img

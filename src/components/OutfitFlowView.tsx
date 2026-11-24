@@ -334,13 +334,6 @@ export function OutfitTurnItem({
                                   alt={bag.name}
                                   className="stack-cell w-full h-176 object-cover"
                                 />
-                                <img
-                                  src="/assets/figma/card-plus.svg"
-                                  alt=""
-                                  width={22}
-                                  height={22}
-                                  className="stack-cell self-end justify-self-end w-22 h-22 m-2"
-                                />
                               </LayerGrid>
                               <img
                                 src="/assets/figma/card-slider-bar.svg"
