@@ -228,7 +228,7 @@ export function OutfitTurnItem({
                             className="stack-cell w-full h-184 object-cover object-top"
                           />
                         </LayerGrid>
-                        <Stack className="px-10 py-8 gap-2 bg-surface min-h-52 w-full min-w-0 justify-center">
+                        <Stack className="px-10 py-8 gap-2 bg-surface w-full min-w-0 justify-center">
                           <Cluster className="gap-4">
                             <img
                               src="/assets/figma/icon-check-black.svg"
@@ -241,9 +241,16 @@ export function OutfitTurnItem({
                               {OUTFIT_SELFIE_PREVIEW.title}
                             </p>
                           </Cluster>
-                          <p className="text-micro text-ink-muted truncate m-0">
-                            {OUTFIT_SELFIE_PREVIEW.subtitle}
-                          </p>
+                          <Stack className="gap-0 w-full min-w-0">
+                            {OUTFIT_SELFIE_PREVIEW.subtitleLines.map((line) => (
+                              <p
+                                key={line}
+                                className="text-micro text-ink-muted m-0"
+                              >
+                                {line}
+                              </p>
+                            ))}
+                          </Stack>
                         </Stack>
                       </motion.div>
                     ) : (
@@ -255,18 +262,18 @@ export function OutfitTurnItem({
                         animate="visible"
                         exit="exit"
                         onClick={() => onPickSelfie(turn.id)}
-                        className="stack-cell w-full min-h-236 rounded-slot border border-dashed border-border-glass bg-surface-tile/40 hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
+                        className="stack-cell w-full min-h-236 rounded-slot border border-dashed border-border-glass bg-surface-tile hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
                       >
-                        <span className="w-36 h-36 rounded-pill bg-surface flex items-center justify-center shadow-bubble">
+                        <span className="p-6 rounded-pill bg-surface flex items-center justify-center shadow-bubble shrink-0">
                           <img
-                            src="/assets/figma/icon-ar-outfit.svg"
+                            src="/assets/figma/icon-add-slot.svg"
                             alt=""
                             width={20}
                             height={20}
-                            className="w-20 h-20 invert"
+                            className="w-20 h-20"
                           />
                         </span>
-                        <span className="text-body text-ink-inverse tracking-xs text-center leading-tight">
+                        <span className="text-body text-ink-inverse tracking-xs text-center leading-none">
                           Pick a selfie
                         </span>
                       </motion.button>

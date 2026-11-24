@@ -13,6 +13,7 @@ Read this file first. You do **not** need to scan the repo, Git remotes, or Verc
 - **Production URL**: `https://coach-chatbot.vercel.app`
 - **Environment variables**: **None required** (100% client-side prototype; product catalog and scripted responses live in `src/data/catalog.ts`)
 - **Full deployment runbook**: [`docs/ops/deployment.md`](docs/ops/deployment.md)
+- **Figma flows component library (agents)**: [`docs/design/figma-flows-library.md`](docs/design/figma-flows-library.md) — page-only `Chat flows only / …` comps, reuse rules, code map, sync gotchas
 
 ## Required Checks Before Every Commit or Deploy
 

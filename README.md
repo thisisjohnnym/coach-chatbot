@@ -16,6 +16,8 @@ pnpm install
 pnpm dev
 ```
 
+Dev server: [http://localhost:3000](http://localhost:3000)
+
 ### URL Query Modes
 
 - `?spot=general` (default) — Opens Cold Start stage from the inline PLP content spot.

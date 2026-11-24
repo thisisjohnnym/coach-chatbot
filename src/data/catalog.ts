@@ -403,7 +403,8 @@ export const STORIES_STARTER_CARDS: StoriesStarterCard[] = [
 export const OUTFIT_SELFIE_PREVIEW = {
   image: "/assets/figma/ad-model.png",
   title: "Your look",
-  subtitle: "Cream & navy knit · Gold accents",
+  /** Two-line caption matching Outfit / Selfie picked in Figma */
+  subtitleLines: ["Cream & navy knit", "Gold accents"] as const,
 } as const;
 
 export const OUTFIT_MATCH_REPLY: CannedReply = {

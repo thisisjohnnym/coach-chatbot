@@ -19,7 +19,7 @@ import {
   staggerCardsVariants,
   upwardCraftedBubbleVariants,
 } from "../motion/presets";
-import { Box, Cluster, LayerGrid, Stack } from "../primitives/Layout";
+import { Box, Cluster, Layer, LayerGrid, Stack } from "../primitives/Layout";
 
 export type CompareStage =
   | "loading"
@@ -162,32 +162,37 @@ export function CompareTurnItem({
             animate="visible"
             exit="exit"
             onClick={() => onOpenPicker(turn.id, slot)}
-            className="stack-cell w-full h-full bg-surface rounded-slot overflow-hidden flex flex-col text-left press-scale motion-reduce:transition-none shadow-bubble"
+            aria-label={`Edit ${bag.name} in compare slot`}
+            className="stack-cell w-full h-full min-h-228 bg-surface-muted rounded-slot overflow-hidden stack-grid text-left press-scale motion-reduce:transition-none"
           >
-            <LayerGrid className="w-full aspect-slot-card bg-surface-muted overflow-hidden shrink-0">
-              <img
-                src={bag.image}
-                alt={bag.name}
-                className="stack-cell w-full h-full object-cover"
-              />
-              <img
-                src="/assets/figma/card-plus.svg"
-                alt=""
-                width={22}
-                height={22}
-                className="stack-cell self-end justify-self-end w-22 h-22 m-2"
-              />
-            </LayerGrid>
-            <img
-              src="/assets/figma/card-slider-bar.svg"
-              alt=""
-              className="w-full h-2 object-cover shrink-0"
-            />
-            <Stack className="p-10 gap-4 bg-surface min-h-61 w-full min-w-0 shrink-0">
-              <p className="text-caption text-ink truncate m-0">{bag.name}</p>
-              <p className="text-caption text-ink tabular-nums m-0">
-                {bag.priceFormatted}
-              </p>
+            <Stack className="stack-cell w-full h-full min-h-0">
+              <LayerGrid className="w-full flex-1 min-h-0 bg-surface-muted overflow-hidden">
+                <img
+                  src={bag.image}
+                  alt={bag.name}
+                  className="stack-cell w-full h-full object-cover"
+                />
+                <Layer
+                  className="self-start justify-self-end m-10 p-6 rounded-pill pointer-events-none"
+                  aria-hidden
+                >
+                  <img
+                    src="/assets/figma/icon-edit-newchat.svg"
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="w-20 h-20 invert"
+                  />
+                </Layer>
+              </LayerGrid>
+              <Stack className="px-5 pt-12 pb-10 gap-7 bg-surface-muted w-full min-w-0 shrink-0">
+                <p className="text-caption text-ink truncate m-0 tracking-xs">
+                  {bag.name}
+                </p>
+                <p className="text-caption text-ink tabular-nums m-0">
+                  {bag.priceFormatted}
+                </p>
+              </Stack>
             </Stack>
           </motion.button>
         ) : (
@@ -199,9 +204,9 @@ export function CompareTurnItem({
             animate="visible"
             exit="exit"
             onClick={() => onOpenPicker(turn.id, slot)}
-            className="stack-cell w-full h-full min-h-228 p-10 rounded-slot border border-dashed border-border-glass bg-surface-tile/40 hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
+            className="stack-cell w-full h-full min-h-228 p-10 rounded-slot border border-dashed border-border-glass bg-surface-tile hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
           >
-            <span className="w-32 h-32 rounded-pill bg-surface flex items-center justify-center shadow-bubble shrink-0">
+            <span className="p-6 rounded-pill bg-surface flex items-center justify-center shadow-bubble shrink-0">
               <img
                 src="/assets/figma/icon-add-slot.svg"
                 alt=""
@@ -210,7 +215,7 @@ export function CompareTurnItem({
                 className="w-20 h-20"
               />
             </span>
-            <span className="text-body text-ink-inverse tracking-xs text-center leading-tight">
+            <span className="text-body text-ink-inverse tracking-xs text-center leading-none">
               Tap to pick
               <br />
               {slot === "A" ? "product n.1" : slotA ? "a product" : "product n.2"}
