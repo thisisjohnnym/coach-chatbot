@@ -164,9 +164,9 @@ export const BAG_CATALOG: BagProduct[] = [
   {
     id: "kisslock-30",
     name: "Kisslock Frame Bag 30 in Dark Cherry",
-    shortName: "Kisslock 30",
-    price: 450,
-    priceFormatted: "$450",
+    shortName: "Kisslock Frame",
+    price: 475,
+    priceFormatted: "$475",
     image: "/assets/figma/bag-kisslock-30.jpg",
     category: "trending",
     specs: {
@@ -206,11 +206,20 @@ export const PLP_COMPARE_ROWS: [BagProduct, BagProduct][] = [
   [BAG_CATALOG[1], BAG_CATALOG[4]],
 ];
 
+/** Figma chat 22 product row (nodes 2014:12839–2014:12841). */
 export const STATEMENT_CAROUSEL_BAGS: BagProduct[] = [
   BAG_CATALOG[2], // Juliet Shoulder Bag 25 ($525)
-  BAG_CATALOG[7], // Tabby 26 Crystal Signature Jacquard ($495)
-  BAG_CATALOG[8], // Kisslock Frame Bag 30 Dark Cherry ($450)
+  BAG_CATALOG[0], // Tabby Shoulder Bag 26 ($475)
+  BAG_CATALOG[8], // Kisslock Frame ($475)
 ];
+
+/** Figma chat 22 intro bubble (node 2301:54339). */
+export const STATEMENT_LEAD =
+  "Statement styles come down to the details. Pick one that feels like you and let it carry the look";
+
+/** Figma chat 22 curation bubble after the carousel (node 2014:12842). */
+export const STATEMENT_CURATION =
+  "Wear the Tabby when you want every light to find you. Reach for the Kisslock Frame when you want high shine and a vintage shape. Choose the Chelsea when you want to keep it moody in dark cherry.";
 
 /** Flip to `"demo-chat"` to restore the floating bubble ad layout. */
 export type ContentSpotAdLayout = "prompts" | "demo-chat";
@@ -692,12 +701,11 @@ export function getCannedReplyForPrompt(prompt: string): CannedReply {
   }
 
   // Canonical Figma "statement" reply — chat 22 (also default for free-typed prompts & gift starter)
+  // Structure: Coach AI lead → product carousel → curation followUpNote → Pick an option
   return {
-    leadParagraphs: [
-      "Statement styles come down to the details: Signature print, an archival kisslock, a color with real depth.",
-      "Pair one with something simple and it carries the whole look.",
-    ],
+    leadParagraphs: [STATEMENT_LEAD],
     bags: STATEMENT_CAROUSEL_BAGS,
+    followUpNote: STATEMENT_CURATION,
     options: STATEMENT_FOLLOW_UP_OPTIONS,
   };
 }

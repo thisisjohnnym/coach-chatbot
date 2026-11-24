@@ -610,7 +610,7 @@ export function ChatThreadView({
                       exit="exit"
                       className="flex flex-col gap-14 w-full min-w-0 items-start"
                     >
-                      {/* Figma suggestion order (chat 22): Coach AI → product carousel → curation copy */}
+                      {/* Figma chat 22: Coach AI lead → product carousel → curation → options */}
                       <motion.div
                         variants={blurScaleVariants}
                         className="flex flex-col gap-5 items-start max-w-full min-w-0"
@@ -618,6 +618,18 @@ export function ChatThreadView({
                         <span className="text-micro text-ink-inverse">
                           Coach AI
                         </span>
+                        {turn.reply.leadParagraphs.length > 0 && (
+                          <Stack className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble gap-10">
+                            {turn.reply.leadParagraphs.map((paragraph, idx) => (
+                              <p
+                                key={idx}
+                                className="text-caption text-ink tracking-xs text-pretty m-0"
+                              >
+                                {paragraph}
+                              </p>
+                            ))}
+                          </Stack>
+                        )}
                       </motion.div>
 
                       {turn.reply.bags && turn.reply.bags.length > 0 && (
@@ -655,24 +667,6 @@ export function ChatThreadView({
                               </Stack>
                             </motion.button>
                           ))}
-                        </motion.div>
-                      )}
-
-                      {turn.reply.leadParagraphs.length > 0 && (
-                        <motion.div
-                          variants={blurScaleVariants}
-                          className="flex flex-col gap-5 items-start max-w-full min-w-0"
-                        >
-                          <Stack className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble gap-10">
-                            {turn.reply.leadParagraphs.map((paragraph, idx) => (
-                              <p
-                                key={idx}
-                                className="text-caption text-ink tracking-xs text-pretty m-0"
-                              >
-                                {paragraph}
-                              </p>
-                            ))}
-                          </Stack>
                         </motion.div>
                       )}
 
@@ -718,16 +712,21 @@ export function ChatThreadView({
                         </motion.div>
                       )}
 
+                      {turn.reply.followUpNote && (
+                        <motion.div
+                          variants={blurScaleVariants}
+                          className="flex flex-col gap-5 items-start max-w-full min-w-0"
+                        >
+                          <Box className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble text-caption text-ink tracking-xs text-pretty">
+                            <p className="m-0">{turn.reply.followUpNote}</p>
+                          </Box>
+                        </motion.div>
+                      )}
+
                       <motion.div
                         variants={blurScaleVariants}
                         className="flex flex-col gap-12 items-start max-w-full min-w-0"
                       >
-                        {turn.reply.followUpNote && (
-                          <Box className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble text-caption text-ink tracking-xs text-pretty">
-                            <p className="m-0">{turn.reply.followUpNote}</p>
-                          </Box>
-                        )}
-
                         {turn.reply.featuredBag && (() => {
                           const featuredBag = turn.reply.featuredBag;
                           const isFeaturedInBag = bagIdsInCart.includes(
