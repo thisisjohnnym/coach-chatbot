@@ -70,7 +70,6 @@ export interface ChatThreadViewProps {
   onViewBagDetails?: (bag: BagProduct) => void;
   onPickSelfie: (turnId: string) => void;
   onOpenComparePicker: (turnId: string, slot: "A" | "B") => void;
-  onEditCompareChoices: (turnId: string) => void;
   onConfirmCompare: (turnId: string) => void;
   onConfirmCompareSomethingElse: (turnId: string) => void;
   onCompareFeatures: (turnId: string) => void;
@@ -118,7 +117,6 @@ export function ChatThreadView({
   onViewBagDetails,
   onPickSelfie,
   onOpenComparePicker,
-  onEditCompareChoices,
   onConfirmCompare,
   onConfirmCompareSomethingElse,
   onCompareFeatures,
@@ -433,7 +431,7 @@ export function ChatThreadView({
           isCompactPreAnswer
             ? "pb-14 overflow-visible"
             : clsx(
-                "h-full min-h-0 pb-52 overflow-y-auto sheet-scrollbar",
+                "h-full min-h-0 pb-20 overflow-y-auto sheet-scrollbar",
                 scrollMaskClass,
               ),
         )}
@@ -460,7 +458,6 @@ export function ChatThreadView({
                     registerChoiceGroupRef={registerChoiceGroupRef}
                     onRevealConfirmChoices={handleRevealConfirmChoices}
                     onOpenPicker={onOpenComparePicker}
-                    onEditChoices={onEditCompareChoices}
                     onConfirmCompare={onConfirmCompare}
                     onConfirmSomethingElse={onConfirmCompareSomethingElse}
                     onCompareFeatures={onCompareFeatures}
@@ -543,7 +540,7 @@ export function ChatThreadView({
                       },
                     }}
                     exit={blurScaleVariants.exit as TargetAndTransition}
-                    className="self-end bg-surface text-ink px-10 py-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp max-w-210 shadow-bubble"
+                    className="self-end bg-surface text-ink p-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp max-w-210 shadow-bubble"
                   >
                     <p className="text-caption tracking-xs text-balance m-0">
                       {turn.userPrompt}
@@ -611,62 +608,112 @@ export function ChatThreadView({
                       className="flex flex-col gap-14 w-full min-w-0 items-start"
                     >
                       {/* Figma chat 22: Coach AI lead → product carousel → curation → options */}
-                      <motion.div
-                        variants={blurScaleVariants}
-                        className="flex flex-col gap-5 items-start max-w-full min-w-0"
-                      >
-                        <span className="text-micro text-ink-inverse">
-                          Coach AI
-                        </span>
-                        {turn.reply.leadParagraphs.length > 0 && (
-                          <Stack className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble gap-10">
-                            {turn.reply.leadParagraphs.map((paragraph, idx) => (
-                              <p
-                                key={idx}
-                                className="text-caption text-ink tracking-xs text-pretty m-0"
-                              >
-                                {paragraph}
-                              </p>
-                            ))}
-                          </Stack>
-                        )}
-                      </motion.div>
+                      {turn.reply.leadParagraphs.length > 0 ? (
+                        <>
+                          <motion.div
+                            variants={blurScaleVariants}
+                            className="flex flex-col gap-5 items-start max-w-full min-w-0"
+                          >
+                            <span className="text-micro text-ink-inverse">
+                              Coach AI
+                            </span>
+                            <Stack className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble gap-10">
+                              {turn.reply.leadParagraphs.map(
+                                (paragraph, idx) => (
+                                  <p
+                                    key={idx}
+                                    className="text-caption text-ink tracking-xs text-pretty m-0"
+                                  >
+                                    {paragraph}
+                                  </p>
+                                ),
+                              )}
+                            </Stack>
+                          </motion.div>
 
-                      {turn.reply.bags && turn.reply.bags.length > 0 && (
-                        <motion.div
-                          variants={staggerCardsVariants}
-                          className="flex flex-row gap-8 w-full min-w-0 overflow-x-auto no-scrollbar py-2"
-                        >
-                          {turn.reply.bags.map((bag) => (
-                            <motion.button
-                              key={bag.id}
-                              type="button"
-                              variants={blurScaleVariants}
-                              onClick={() => onInspectBag?.(bag)}
-                              className="w-132 shrink-0 bg-surface rounded-card overflow-hidden flex flex-col text-left press-scale motion-reduce:transition-none shadow-bubble"
+                          {turn.reply.bags && turn.reply.bags.length > 0 && (
+                            <motion.div
+                              variants={staggerCardsVariants}
+                              className="flex flex-row gap-8 w-full min-w-0 overflow-x-auto no-scrollbar py-2"
                             >
-                              <LayerGrid className="w-full h-176 bg-surface-muted overflow-hidden">
-                                <img
-                                  src={bag.image}
-                                  alt={bag.name}
-                                  className="stack-cell w-full h-176 object-cover"
-                                />
-                              </LayerGrid>
-                              <img
-                                src="/assets/figma/card-slider-bar.svg"
-                                alt=""
-                                className="w-full h-2 object-cover"
-                              />
-                              <Stack className="p-10 gap-4 bg-surface w-full">
-                                <p className="text-caption text-ink truncate m-0">
-                                  {bag.name}
-                                </p>
-                                <p className="text-caption text-ink tabular-nums m-0">
-                                  {bag.priceFormatted}
-                                </p>
-                              </Stack>
-                            </motion.button>
-                          ))}
+                              {turn.reply.bags.map((bag) => (
+                                <motion.button
+                                  key={bag.id}
+                                  type="button"
+                                  variants={blurScaleVariants}
+                                  onClick={() => onInspectBag?.(bag)}
+                                  className="w-132 shrink-0 bg-surface rounded-card overflow-hidden flex flex-col text-left press-scale motion-reduce:transition-none shadow-bubble"
+                                >
+                                  <LayerGrid className="w-full h-176 bg-surface-muted overflow-hidden">
+                                    <img
+                                      src={bag.image}
+                                      alt={bag.name}
+                                      className="stack-cell w-full h-176 object-cover"
+                                    />
+                                  </LayerGrid>
+                                  <img
+                                    src="/assets/figma/card-slider-bar.svg"
+                                    alt=""
+                                    className="w-full h-2 object-cover"
+                                  />
+                                  <Stack className="p-10 gap-4 bg-surface w-full">
+                                    <p className="text-caption text-ink truncate m-0">
+                                      {bag.name}
+                                    </p>
+                                    <p className="text-caption text-ink tabular-nums m-0">
+                                      {bag.priceFormatted}
+                                    </p>
+                                  </Stack>
+                                </motion.button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </>
+                      ) : (
+                        <motion.div
+                          variants={blurScaleVariants}
+                          className="flex flex-col gap-5 w-full min-w-0 items-start"
+                        >
+                          <span className="text-micro text-ink-inverse">
+                            Coach AI
+                          </span>
+                          {turn.reply.bags && turn.reply.bags.length > 0 && (
+                            <motion.div
+                              variants={staggerCardsVariants}
+                              className="flex flex-row gap-8 w-full min-w-0 overflow-x-auto no-scrollbar pb-2"
+                            >
+                              {turn.reply.bags.map((bag) => (
+                                <motion.button
+                                  key={bag.id}
+                                  type="button"
+                                  variants={blurScaleVariants}
+                                  onClick={() => onInspectBag?.(bag)}
+                                  className="w-132 shrink-0 bg-surface rounded-card overflow-hidden flex flex-col text-left press-scale motion-reduce:transition-none shadow-bubble"
+                                >
+                                  <LayerGrid className="w-full h-176 bg-surface-muted overflow-hidden">
+                                    <img
+                                      src={bag.image}
+                                      alt={bag.name}
+                                      className="stack-cell w-full h-176 object-cover"
+                                    />
+                                  </LayerGrid>
+                                  <img
+                                    src="/assets/figma/card-slider-bar.svg"
+                                    alt=""
+                                    className="w-full h-2 object-cover"
+                                  />
+                                  <Stack className="p-10 gap-4 bg-surface w-full">
+                                    <p className="text-caption text-ink truncate m-0">
+                                      {bag.name}
+                                    </p>
+                                    <p className="text-caption text-ink tabular-nums m-0">
+                                      {bag.priceFormatted}
+                                    </p>
+                                  </Stack>
+                                </motion.button>
+                              ))}
+                            </motion.div>
+                          )}
                         </motion.div>
                       )}
 
@@ -826,18 +873,18 @@ export function ChatThreadView({
                           );
                         })()}
 
-                        <Cluster className="gap-10 pt-2">
+                        <Cluster className="gap-5 pt-2">
                           <span className="text-micro text-ink-inverse">
                             How was my answer?
                           </span>
-                          <Cluster className="gap-4">
+                          <Cluster>
                             <button
                               type="button"
                               aria-label="Helpful answer"
                               aria-pressed={turn.feedback === "up"}
                               onClick={() => onFeedback(turn.id, "up")}
                               className={clsx(
-                                "w-36 h-36 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
+                                "w-34 h-34 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
                                 turn.feedback === "up"
                                   ? "bg-surface/25"
                                   : "hover:bg-surface/10",
@@ -846,9 +893,9 @@ export function ChatThreadView({
                               <img
                                 src="/assets/figma/icon-thumb-up.svg"
                                 alt=""
-                                width={18}
-                                height={18}
-                                className="w-18 h-18"
+                                width={24}
+                                height={24}
+                                className="w-24 h-24"
                               />
                             </button>
                             <button
@@ -857,7 +904,7 @@ export function ChatThreadView({
                               aria-pressed={turn.feedback === "down"}
                               onClick={() => onFeedback(turn.id, "down")}
                               className={clsx(
-                                "w-36 h-36 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
+                                "w-34 h-34 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
                                 turn.feedback === "down"
                                   ? "bg-surface/25"
                                   : "hover:bg-surface/10",
@@ -866,9 +913,9 @@ export function ChatThreadView({
                               <img
                                 src="/assets/figma/icon-thumb-down.svg"
                                 alt=""
-                                width={18}
-                                height={18}
-                                className="w-18 h-18"
+                                width={24}
+                                height={24}
+                                className="w-24 h-24"
                               />
                             </button>
                           </Cluster>
@@ -887,14 +934,11 @@ export function ChatThreadView({
                             variants={blurScaleVariants}
                             initial={answerAlreadySeen ? false : "hidden"}
                             animate="visible"
-                            className="w-full flex flex-col items-end gap-8 pt-4"
+                            className="w-full flex flex-col items-center gap-10 pt-4"
                           >
-                            <span className="text-micro text-ink-inverse">
-                              Pick an option
-                            </span>
                             <motion.div
                               variants={staggerCardsVariants}
-                              className="flex flex-row gap-6 w-full items-stretch"
+                              className="flex flex-row gap-10 w-full items-stretch"
                             >
                               {turn.reply.options.map((opt) => {
                                 const isSelected =
@@ -918,10 +962,10 @@ export function ChatThreadView({
                                     <img
                                       src="/assets/figma/icon-ai-white.svg"
                                       alt=""
-                                      width={18}
-                                      height={18}
+                                      width={20}
+                                      height={20}
                                       className={clsx(
-                                        "w-18 h-18 shrink-0 transition-icon-invert motion-reduce:transition-none",
+                                        "w-20 h-20 shrink-0 transition-icon-invert motion-reduce:transition-none",
                                         isSelected && "invert scale-105",
                                       )}
                                     />
@@ -932,6 +976,9 @@ export function ChatThreadView({
                                 );
                               })}
                             </motion.div>
+                            <span className="text-micro text-ink-inverse text-center">
+                              Pick an option to keep chatting
+                            </span>
                           </motion.div>
                         </div>
                       )}

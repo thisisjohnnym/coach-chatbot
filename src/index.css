@@ -40,6 +40,7 @@
   --color-surface-sheet-wash: rgba(0, 0, 0, 0.4);
   --color-surface-tile: rgba(0, 0, 0, 0.12);
   --color-surface-tile-hover: rgba(255, 255, 255, 0.16);
+  --color-surface-glass: rgba(255, 255, 255, 0.1);
   --color-surface-dock: rgba(0, 0, 0, 0.35);
   --color-surface-selector: rgba(20, 19, 18, 0.86);
   --color-surface-scrim: rgba(0, 0, 0, 0.68);
@@ -64,6 +65,7 @@
   --color-border-subtle: #e1e1e1;
   --color-border-faint: #f0f0f0;
   --color-border-glass: rgba(255, 255, 255, 0.4);
+  --color-border-glass-soft: rgba(255, 255, 255, 0.3);
   --color-border-divider: rgba(255, 255, 255, 0.2);
   --color-border-dock: rgba(255, 255, 255, 0.1);
   --color-stroke-ai-cyan: #16e2ed;
@@ -416,38 +418,19 @@
 }
 
 @utility cold-start-shell {
-  padding-bottom: 14px;
+  padding-bottom: 20px;
   @media (min-height: 760px) {
-    padding-bottom: 48px;
+    padding-bottom: 30px;
   }
 }
 
 @utility cold-start-heading {
-  padding-top: 2px;
-  padding-bottom: 6px;
-  @media (min-height: 760px) {
-    padding-bottom: 14px;
-  }
+  padding-top: 10px;
+  padding-bottom: 0px;
 }
 
-@utility cold-start-card-tall {
-  min-height: 76px;
-  @media (min-height: 660px) {
-    min-height: 86px;
-  }
-  @media (min-height: 760px) {
-    min-height: 107px;
-  }
-}
-
-@utility cold-start-card-short {
-  min-height: 72px;
-  @media (min-height: 660px) {
-    min-height: 80px;
-  }
-  @media (min-height: 760px) {
-    min-height: 91px;
-  }
+@utility cold-start-card {
+  min-height: 100px;
 }
 
 @utility orb-compact-scale {

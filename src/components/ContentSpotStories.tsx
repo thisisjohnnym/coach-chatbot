@@ -403,11 +403,7 @@ export function ContentSpotStories({
                           </p>
                         </Box>
 
-                        <Stack className="w-full gap-8 items-end">
-                          <span className="text-micro text-ink-inverse">
-                            Pick an option
-                          </span>
-
+                        <Stack className="w-full gap-10 items-center">
                           <div
                             data-story-interactive="true"
                             className="-mx-24 px-24 w-screen max-w-430 flex flex-row gap-10 justify-center overflow-x-auto no-scrollbar items-stretch"
@@ -451,6 +447,9 @@ export function ContentSpotStories({
                               );
                             })}
                           </div>
+                          <span className="text-micro text-ink-inverse text-center">
+                            Pick an option to keep chatting
+                          </span>
                         </Stack>
                       </Stack>
 

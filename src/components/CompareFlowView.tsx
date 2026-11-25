@@ -19,7 +19,7 @@ import {
   staggerCardsVariants,
   upwardCraftedBubbleVariants,
 } from "../motion/presets";
-import { Box, Cluster, Layer, LayerGrid, Stack } from "../primitives/Layout";
+import { Box, Cluster, LayerGrid, Stack } from "../primitives/Layout";
 
 export type CompareStage =
   | "loading"
@@ -58,7 +58,6 @@ export interface CompareTurnItemProps {
   registerChoiceGroupRef: (key: string, node: HTMLDivElement | null) => void;
   onRevealConfirmChoices: (turnId: string) => void;
   onOpenPicker: (turnId: string, slot: "A" | "B") => void;
-  onEditChoices: (turnId: string) => void;
   onConfirmCompare: (turnId: string) => void;
   onConfirmSomethingElse: (turnId: string) => void;
   onCompareFeatures: (turnId: string) => void;
@@ -85,7 +84,6 @@ export function CompareTurnItem({
   registerChoiceGroupRef,
   onRevealConfirmChoices,
   onOpenPicker,
-  onEditChoices,
   onConfirmCompare,
   onConfirmSomethingElse,
   onCompareFeatures,
@@ -150,7 +148,7 @@ export function CompareTurnItem({
     <motion.div
       key={slot}
       variants={compareSlotItemVariants}
-      className="flex-1 min-w-0 max-w-156 stack-grid"
+      className="flex-1 min-w-0 stack-grid"
     >
       <AnimatePresence initial={false}>
         {bag ? (
@@ -162,7 +160,7 @@ export function CompareTurnItem({
             animate="visible"
             exit="exit"
             onClick={() => onOpenPicker(turn.id, slot)}
-            aria-label={`Edit ${bag.name} in compare slot`}
+            aria-label={`Change ${bag.name} in compare slot`}
             className="stack-cell w-full h-full min-h-228 bg-surface-muted rounded-slot overflow-hidden stack-grid text-left press-scale motion-reduce:transition-none"
           >
             <Stack className="stack-cell w-full h-full min-h-0">
@@ -172,27 +170,30 @@ export function CompareTurnItem({
                   alt={bag.name}
                   className="stack-cell w-full h-full object-cover"
                 />
-                <Layer
-                  className="self-start justify-self-end m-10 p-6 rounded-pill pointer-events-none"
-                  aria-hidden
+              </LayerGrid>
+              <Cluster className="pl-8 pr-6 py-8 gap-10 bg-surface w-full min-w-0 shrink-0">
+                <Stack className="flex-1 min-w-0 gap-4">
+                  <p className="text-micro font-medium text-ink-charcoal line-clamp-2 min-h-28 m-0">
+                    {bag.name}
+                  </p>
+                  <p className="text-micro text-ink-muted tabular-nums m-0">
+                    {bag.priceFormatted}
+                  </p>
+                </Stack>
+                <Box
+                  as="span"
+                  aria-hidden="true"
+                  className="pl-12 pr-8 py-6 border-l border-border-subtle flex items-center shrink-0"
                 >
                   <img
-                    src="/assets/figma/icon-edit-newchat.svg"
+                    src="/assets/figma/icon-change-black.svg"
                     alt=""
-                    width={20}
-                    height={20}
-                    className="w-20 h-20 invert"
+                    width={24}
+                    height={24}
+                    className="w-24 h-24 -m-2 max-w-none"
                   />
-                </Layer>
-              </LayerGrid>
-              <Stack className="px-5 pt-12 pb-10 gap-7 bg-surface-muted w-full min-w-0 shrink-0">
-                <p className="text-caption text-ink truncate m-0 tracking-xs">
-                  {bag.name}
-                </p>
-                <p className="text-caption text-ink tabular-nums m-0">
-                  {bag.priceFormatted}
-                </p>
-              </Stack>
+                </Box>
+              </Cluster>
             </Stack>
           </motion.button>
         ) : (
@@ -204,21 +205,20 @@ export function CompareTurnItem({
             animate="visible"
             exit="exit"
             onClick={() => onOpenPicker(turn.id, slot)}
+            aria-label={`Pick a bag for slot ${slot === "A" ? 1 : 2}`}
             className="stack-cell w-full h-full min-h-228 p-10 rounded-slot border border-dashed border-border-glass bg-surface-tile hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
           >
-            <span className="p-6 rounded-pill bg-surface flex items-center justify-center shadow-bubble shrink-0">
+            <span className="w-32 h-32 rounded-pill bg-surface-glass border border-border-glass-soft flex items-center justify-center overflow-hidden shrink-0">
               <img
-                src="/assets/figma/icon-add-slot.svg"
+                src="/assets/figma/icon-add-white.svg"
                 alt=""
-                width={20}
-                height={20}
-                className="w-20 h-20"
+                width={24}
+                height={24}
+                className="w-24 h-24 max-w-none"
               />
             </span>
             <span className="text-body text-ink-inverse tracking-xs text-center leading-none">
-              Tap to pick
-              <br />
-              {slot === "A" ? "product n.1" : slotA ? "a product" : "product n.2"}
+              Pick a bag
             </span>
           </motion.button>
         )}
@@ -294,7 +294,7 @@ export function CompareTurnItem({
             },
           }}
           exit={upwardCraftedBubbleVariants.exit as TargetAndTransition}
-          className="self-end bg-surface text-ink px-10 py-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp max-w-210 shadow-bubble flex flex-row items-center gap-6"
+          className="self-end bg-surface text-ink p-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp max-w-210 shadow-bubble flex flex-row items-center gap-6"
         >
           {(turn.showCompareIcon ||
             turn.userPrompt === "Help me compare bags") && (
@@ -348,7 +348,7 @@ export function CompareTurnItem({
               },
             }}
             exit={blurScaleVariants.exit as TargetAndTransition}
-            className="self-start flex flex-col gap-8 items-start"
+            className="self-start flex flex-col gap-5 items-start"
           >
             <span className="text-micro text-ink-inverse">Coach AI</span>
             <Box className="w-212 max-w-full bg-surface p-8 rounded-bubble shadow-bubble text-caption text-ink tracking-xs">
@@ -396,28 +396,11 @@ export function CompareTurnItem({
 
                 <motion.div
                   variants={compareSlotRowVariants}
-                  className="flex flex-row gap-14 justify-center items-stretch w-full pt-4"
+                  className="flex flex-row gap-10 justify-center items-stretch w-full pt-4"
                 >
                   {renderSlot("A", slotA)}
                   {renderSlot("B", slotB)}
                 </motion.div>
-
-                <AnimatePresence initial={!selectingAlreadySeen}>
-                  {(slotA || slotB) && (
-                    <motion.button
-                      key="edit-choices"
-                      type="button"
-                      variants={announceAfterModalVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      onClick={() => onEditChoices(turn.id)}
-                      className="text-caption text-ink-inverse underline press-scale motion-reduce:transition-none self-center min-h-36 px-12 flex items-center justify-center"
-                    >
-                      Edit choices
-                    </motion.button>
-                  )}
-                </AnimatePresence>
 
                 <AnimatePresence initial={!selectingAlreadySeen}>
                   {slotA && slotB && (
@@ -441,7 +424,7 @@ export function CompareTurnItem({
                             aria-pressed={isConfirmCompareActive}
                             onClick={() => onConfirmCompare(turn.id)}
                             className={clsx(
-                              "flex-1 min-w-0 p-13 rounded-tile border border-border-glass flex flex-col justify-between gap-24 text-left press-scale motion-reduce:transition-none",
+                              "flex-1 min-w-0 min-h-100 p-13 rounded-tile border border-border-glass flex flex-col justify-between gap-30 text-left press-scale motion-reduce:transition-none",
                               isConfirmCompareActive
                                 ? "bg-surface text-ink"
                                 : "bg-surface-tile hover:bg-surface-tile-hover text-ink-inverse",
@@ -468,7 +451,7 @@ export function CompareTurnItem({
                             aria-pressed={isConfirmSomethingElseActive}
                             onClick={() => onConfirmSomethingElse(turn.id)}
                             className={clsx(
-                              "flex-1 min-w-0 p-13 rounded-tile border border-border-glass flex flex-col justify-between gap-24 text-left press-scale motion-reduce:transition-none",
+                              "flex-1 min-w-0 min-h-100 p-13 rounded-tile border border-border-glass flex flex-col justify-between gap-30 text-left press-scale motion-reduce:transition-none",
                               isConfirmSomethingElseActive
                                 ? "bg-surface text-ink"
                                 : "bg-surface-tile hover:bg-surface-tile-hover text-ink-inverse",
@@ -696,11 +679,11 @@ export function CompareTurnItem({
                                             initial="hidden"
                                             animate="visible"
                                             exit="exit"
-                                            src="/assets/figma/icon-bag-white.svg"
+                                            src="/assets/figma/icon-bag-black.svg"
                                             alt=""
                                             width={15}
                                             height={15}
-                                            className="stack-cell w-15 h-15 invert"
+                                            className="stack-cell w-15 h-15"
                                           />
                                         )}
                                       </AnimatePresence>
@@ -724,92 +707,92 @@ export function CompareTurnItem({
                     </motion.div>
                   </motion.div>
 
-                  {/* 4. Recommendation Card */}
+                  {/* 4. Coach AI Recommendation + Follow-up Question + Feedback */}
                   <motion.div
-                    variants={blurScaleVariants}
-                    className="bg-surface-recommend rounded-bubble p-15 flex flex-col gap-10 text-ink-inverse"
+                    variants={staggerCardsVariants}
+                    className="flex flex-col gap-8 items-start max-w-full min-w-0"
                   >
-                    <p className="text-subhead font-medium m-0">
-                      Our recommendation
-                    </p>
-                    <p className="text-body text-ink-inverse-soft m-0 text-pretty">
-                      {slotA.specs.summaryNote} {slotB.specs.summaryNote}
-                    </p>
-                    <Cluster className="self-start bg-surface text-ink rounded-slot px-8 py-5 gap-4 text-caption">
-                      <img
-                        src="/assets/figma/sparkle-black.svg"
-                        alt=""
-                        width={14}
-                        height={14}
-                        className="w-14 h-14 shrink-0"
-                      />
-                      <span>AI-powered comparison</span>
-                    </Cluster>
-                  </motion.div>
-
-                  {/* 5. Follow-up Coach AI Question + Feedback + Option Tiles */}
-                  <motion.div
-                    variants={blurScaleVariants}
-                    className="flex flex-col gap-20 w-full"
-                  >
-                    <Stack className="gap-5 items-start">
+                    <motion.div
+                      variants={blurScaleVariants}
+                      className="flex flex-col gap-5 items-start max-w-full min-w-0"
+                    >
                       <span className="text-micro text-ink-inverse">
                         Coach AI
                       </span>
+                      <Stack className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble gap-6">
+                        <p className="text-caption font-medium text-ink tracking-xs m-0">
+                          Our recommendation
+                        </p>
+                        <p className="text-caption text-ink tracking-xs text-pretty m-0">
+                          {slotA.specs.summaryNote} {slotB.specs.summaryNote}
+                        </p>
+                      </Stack>
+                    </motion.div>
+
+                    <motion.div
+                      variants={blurScaleVariants}
+                      className="flex flex-col gap-4 items-start max-w-full min-w-0"
+                    >
                       <Box className="w-296 max-w-full bg-surface p-10 rounded-bubble shadow-bubble text-caption text-ink tracking-xs text-pretty">
                         Would you like to know about something specific or
                         compare something else?
                       </Box>
-                    </Stack>
 
-                    <Cluster className="gap-10">
-                      <span className="text-micro text-ink-inverse">
-                        How was my answer?
-                      </span>
-                      <Cluster className="gap-4">
-                        <button
-                          type="button"
-                          aria-label="Helpful comparison"
-                          aria-pressed={turn.feedback === "up"}
-                          onClick={() => onFeedback(turn.id, "up")}
-                          className={clsx(
-                            "w-36 h-36 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
-                            turn.feedback === "up"
-                              ? "bg-surface/25"
-                              : "hover:bg-surface/10",
-                          )}
-                        >
-                          <img
-                            src="/assets/figma/icon-thumb-up.svg"
-                            alt=""
-                            width={18}
-                            height={18}
-                            className="w-18 h-18"
-                          />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Unhelpful comparison"
-                          aria-pressed={turn.feedback === "down"}
-                          onClick={() => onFeedback(turn.id, "down")}
-                          className={clsx(
-                            "w-36 h-36 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
-                            turn.feedback === "down"
-                              ? "bg-surface/25"
-                              : "hover:bg-surface/10",
-                          )}
-                        >
-                          <img
-                            src="/assets/figma/icon-thumb-down.svg"
-                            alt=""
-                            width={18}
-                            height={18}
-                            className="w-18 h-18"
-                          />
-                        </button>
+                      <Cluster className="gap-5">
+                        <span className="text-micro text-ink-inverse">
+                          How was my answer?
+                        </span>
+                        <Cluster>
+                          <button
+                            type="button"
+                            aria-label="Helpful comparison"
+                            aria-pressed={turn.feedback === "up"}
+                            onClick={() => onFeedback(turn.id, "up")}
+                            className={clsx(
+                              "w-34 h-34 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
+                              turn.feedback === "up"
+                                ? "bg-surface/25"
+                                : "hover:bg-surface/10",
+                            )}
+                          >
+                            <img
+                              src="/assets/figma/icon-thumb-up.svg"
+                              alt=""
+                              width={24}
+                              height={24}
+                              className="w-24 h-24"
+                            />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Unhelpful comparison"
+                            aria-pressed={turn.feedback === "down"}
+                            onClick={() => onFeedback(turn.id, "down")}
+                            className={clsx(
+                              "w-34 h-34 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
+                              turn.feedback === "down"
+                                ? "bg-surface/25"
+                                : "hover:bg-surface/10",
+                            )}
+                          >
+                            <img
+                              src="/assets/figma/icon-thumb-down.svg"
+                              alt=""
+                              width={24}
+                              height={24}
+                              className="w-24 h-24"
+                            />
+                          </button>
+                        </Cluster>
                       </Cluster>
-                    </Cluster>
+                    </motion.div>
+                  </motion.div>
 
+                  {/* 5. Option Tiles */}
+                  <motion.div
+                    variants={blurScaleVariants}
+                    className="flex flex-col gap-20 w-full"
+                  >
                     <div
                       ref={(node) =>
                         registerChoiceGroupRef(`${turn.id}:followup`, node)
@@ -875,8 +858,8 @@ export function CompareTurnItem({
                             </span>
                           </button>
                         </Box>
-                        <span className="text-micro text-ink-inverse">
-                          Pick an option to continue
+                        <span className="text-micro text-ink-inverse text-center">
+                          Pick an option to keep chatting
                         </span>
                       </Stack>
                     </div>

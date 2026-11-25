@@ -95,10 +95,10 @@ export function ChatInputDock({
       as="footer"
       onMouseDown={handleDockMouseDown}
       className={clsx(
-        "w-full bg-surface-dock border-t border-x border-border-dock rounded-t-dock px-10 transition-dock-focus motion-reduce:transition-none cursor-text",
+        "w-full bg-surface-dock border-t border-x border-border-dock rounded-t-dock pl-10 transition-dock-focus motion-reduce:transition-none cursor-text",
         focused
-          ? "pt-12 pb-dock-focused gap-14"
-          : "pt-10 pb-dock-resting gap-10",
+          ? "pr-10 pt-22 pb-dock-focused gap-14"
+          : "pr-20 pt-20 pb-dock-resting gap-10",
       )}
     >
       <Box

@@ -137,7 +137,7 @@ Stable IDs for the flows page. Prefer these over recreating.
 
 | Component | Node ID | Use for |
 |-----------|---------|---------|
-| `Chat flows only / Actions / Icon` (set) | `2236:11851` | `Icon=ai\|selfie\|compare\|chat\|find\|voice\|plus\|confirm\|edit` — always instance this set; never paste raw vectors |
+| `Chat flows only / Actions / Icon` (set) | `2236:11851` | `Icon=ai\|selfie\|compare\|chat\|find\|voice\|plus\|confirm\|edit\|upload\|change` — always instance this set; never paste raw vectors. Code assets: `upload` → `icon-upload-white.svg` (`2320:31910`), `change` → `icon-change-black.svg` (`2320:32248`), white `plus` → `icon-add-white.svg` |
 | `Chat flows only / Badges / Viewed` | `2270:11470` | PLP “Viewed” pill — place on **Row/Product** wrappers; you cannot append into locked product instances |
 
 ### Content spot
@@ -160,8 +160,10 @@ Stable IDs for the flows page. Prefer these over recreating.
 
 | Component | Node ID | Use for |
 |-----------|---------|---------|
-| `Chat flows only / Outfit / Selfie empty` | `2281:13196` | Dashed “Pick a selfie” card |
-| `Chat flows only / Outfit / Selfie picked` | `2281:13197` | “Your look” card with media + caption |
+| `Chat flows only / Outfit / Selfie empty` | `2281:13196` | Dashed “Pick a selfie” card; `upload` icon in 32px glass circle |
+| `Chat flows only / Outfit / Selfie picked` | `2281:13197` | “Your look” card with media + caption; white footer ends in divider + `change` icon |
+
+Compare `Slot empty` / `Slot filled` follow the same pattern: white `plus` in the 32px glass circle (`bg-surface-glass` + `border-glass-soft`), and filled slots use a white name/price footer with divider + `change` icon instead of an edit overlay.
 
 ---
 

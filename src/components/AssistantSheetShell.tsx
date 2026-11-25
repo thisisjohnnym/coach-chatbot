@@ -232,7 +232,9 @@ export function AssistantSheetShell({
                       <img
                         src="/assets/figma/sparkle-white.svg"
                         alt=""
-                        className="shrink-0"
+                        width={20}
+                        height={20}
+                        className="w-20 h-20 shrink-0"
                       />
                       <Box
                         as="span"
@@ -277,7 +279,7 @@ export function AssistantSheetShell({
                             as="button"
                             type="button"
                             onClick={onNewChat}
-                            className="text-ink-inverse h-32 pr-6 py-6 rounded-pill flex flex-row items-center gap-4 press-scale motion-reduce:transition-none"
+                            className="text-ink-inverse h-32 px-10 py-6 rounded-pill flex flex-row items-center gap-2 press-scale motion-reduce:transition-none"
                           >
                             <Box
                               as="span"
@@ -291,7 +293,7 @@ export function AssistantSheetShell({
                             </Box>
                             <Box
                               as="span"
-                              className="text-body text-ink-inverse tracking-xs pt-3 whitespace-nowrap"
+                              className="text-caption text-ink-inverse tracking-xs pt-3 whitespace-nowrap"
                             >
                               New Chat
                             </Box>

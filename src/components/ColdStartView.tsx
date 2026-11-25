@@ -20,9 +20,6 @@ export interface ColdStartViewProps {
   onSelectStarter: (action: StarterAction) => void;
 }
 
-const ROW_ONE_ACTIONS = COLD_START_ACTIONS.filter((action) => action.row === 1);
-const ROW_TWO_ACTIONS = COLD_START_ACTIONS.filter((action) => action.row === 2);
-
 const TILE_INDEX_BY_ID: Record<StarterAction["id"], number> = {
   narrow: 0,
   outfit: 1,
@@ -40,10 +37,7 @@ export function ColdStartView({
   const prefersReducedMotion = useReducedMotion();
   const isExitingSelection = selectedStarterId !== null;
 
-  const renderCard = (
-    action: StarterAction,
-    rowHeightClass: "cold-start-card-tall" | "cold-start-card-short",
-  ) => {
+  const renderCard = (action: StarterAction) => {
     const isSelected = selectedStarterId === action.id;
     const tileTiming = SHEET_OPEN_CHOREO.tiles[TILE_INDEX_BY_ID[action.id]];
 
@@ -90,8 +84,7 @@ export function ColdStartView({
         aria-pressed={isSelected}
         onClick={() => onSelectStarter(action)}
         className={clsx(
-          "flex-1 min-w-0 p-12 rounded-tile border flex flex-col items-start justify-between gap-8 text-left text-ink-inverse press-scale motion-reduce:transition-none will-change-transform",
-          rowHeightClass,
+          "min-w-0 p-13 rounded-tile border flex flex-col items-start justify-between gap-12 text-left text-ink-inverse cold-start-card press-scale motion-reduce:transition-none will-change-transform",
           isExitingSelection && "pointer-events-none",
           isSelected
             ? "bg-surface-tile-hover border-surface"
@@ -101,9 +94,9 @@ export function ColdStartView({
         <img
           src={action.icon}
           alt=""
-          width={22}
-          height={22}
-          className="w-22 h-22 shrink-0"
+          width={20}
+          height={20}
+          className="w-20 h-20 shrink-0"
         />
         <span className="text-body tracking-xs text-balance break-words">
           {action.label}
@@ -113,7 +106,7 @@ export function ColdStartView({
   };
 
   return (
-    <Stack className="h-full min-h-0 justify-end cold-start-shell px-20 gap-8 w-full min-w-0 overflow-visible">
+    <Stack className="h-full min-h-0 justify-end cold-start-shell px-20 gap-10 w-full min-w-0 overflow-visible">
       <motion.div
         initial={false}
         animate={
@@ -210,17 +203,8 @@ export function ColdStartView({
         className="w-full min-w-0 overflow-visible will-change-transform"
       >
         {sheetOpenStagger ? (
-          <Box className="w-full min-w-0 overflow-visible">
-            <Box className="flex flex-row gap-10 w-full mb-10 items-stretch">
-              {ROW_ONE_ACTIONS.map((action) =>
-                renderCard(action, "cold-start-card-tall"),
-              )}
-            </Box>
-            <Box className="flex flex-row gap-10 w-full items-stretch">
-              {ROW_TWO_ACTIONS.map((action) =>
-                renderCard(action, "cold-start-card-short"),
-              )}
-            </Box>
+          <Box className="grid grid-cols-2 auto-rows-fr gap-10 w-full min-w-0 overflow-visible">
+            {COLD_START_ACTIONS.map((action) => renderCard(action))}
           </Box>
         ) : (
           <motion.div
@@ -239,18 +223,9 @@ export function ColdStartView({
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="w-full min-w-0 overflow-visible"
+            className="grid grid-cols-2 auto-rows-fr gap-10 w-full min-w-0 overflow-visible"
           >
-            <Box className="flex flex-row gap-10 w-full mb-10 items-stretch">
-              {ROW_ONE_ACTIONS.map((action) =>
-                renderCard(action, "cold-start-card-tall"),
-              )}
-            </Box>
-            <Box className="flex flex-row gap-10 w-full items-stretch">
-              {ROW_TWO_ACTIONS.map((action) =>
-                renderCard(action, "cold-start-card-short"),
-              )}
-            </Box>
+            {COLD_START_ACTIONS.map((action) => renderCard(action))}
           </motion.div>
         )}
       </motion.div>

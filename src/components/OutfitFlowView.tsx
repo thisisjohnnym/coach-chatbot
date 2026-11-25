@@ -108,7 +108,7 @@ export function OutfitTurnItem({
             },
           }}
           exit={upwardCraftedBubbleVariants.exit as TargetAndTransition}
-          className="self-end bg-surface text-ink px-10 py-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp max-w-210 shadow-bubble flex flex-row items-center gap-6"
+          className="self-end bg-surface text-ink p-8 rounded-tl-bubble rounded-bl-bubble rounded-br-bubble rounded-tr-sharp max-w-210 shadow-bubble flex flex-row items-center gap-6"
         >
           {turn.userPrompt === OUTFIT_STARTER_PROMPT && (
             <img
@@ -160,7 +160,7 @@ export function OutfitTurnItem({
               },
             }}
             exit={blurScaleVariants.exit as TargetAndTransition}
-            className="self-start flex flex-col gap-8 items-start"
+            className="self-start flex flex-col gap-5 items-start"
           >
             <span className="text-micro text-ink-inverse">Coach AI</span>
             <Box className="w-212 max-w-full bg-surface p-8 rounded-bubble shadow-bubble text-caption text-ink tracking-xs">
@@ -209,7 +209,7 @@ export function OutfitTurnItem({
               >
                 <motion.div
                   variants={compareSlotItemVariants}
-                  className="w-176 max-w-full min-h-236 shrink-0 stack-grid"
+                  className="w-176 max-w-full min-h-228 shrink-0 stack-grid"
                 >
                   <AnimatePresence initial={false}>
                     {selfiePicked ? (
@@ -219,29 +219,20 @@ export function OutfitTurnItem({
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="stack-cell w-full bg-surface rounded-slot overflow-hidden flex flex-col text-left shadow-bubble"
+                        className="stack-cell w-full h-228 bg-surface rounded-slot overflow-hidden flex flex-col text-left shadow-bubble"
                       >
-                        <LayerGrid className="w-full h-184 bg-surface-portrait overflow-hidden shrink-0 image-outline">
+                        <LayerGrid className="w-full flex-1 min-h-0 bg-surface-portrait overflow-hidden image-outline">
                           <img
                             src={OUTFIT_SELFIE_PREVIEW.image}
                             alt="Selected outfit selfie"
-                            className="stack-cell w-full h-184 object-cover object-top"
+                            className="stack-cell w-full h-full object-cover object-top"
                           />
                         </LayerGrid>
-                        <Stack className="px-10 py-8 gap-2 bg-surface w-full min-w-0 justify-center">
-                          <Cluster className="gap-4">
-                            <img
-                              src="/assets/figma/icon-check-black.svg"
-                              alt=""
-                              width={14}
-                              height={14}
-                              className="w-14 h-14 shrink-0"
-                            />
-                            <p className="text-caption text-ink truncate m-0">
+                        <Cluster className="pl-8 pr-6 py-8 bg-surface w-full min-w-0 shrink-0">
+                          <Stack className="flex-1 min-w-0">
+                            <p className="pt-2 text-micro font-medium text-ink-charcoal truncate m-0">
                               {OUTFIT_SELFIE_PREVIEW.title}
                             </p>
-                          </Cluster>
-                          <Stack className="gap-0 w-full min-w-0">
                             {OUTFIT_SELFIE_PREVIEW.subtitleLines.map((line) => (
                               <p
                                 key={line}
@@ -251,7 +242,20 @@ export function OutfitTurnItem({
                               </p>
                             ))}
                           </Stack>
-                        </Stack>
+                          <Box
+                            as="span"
+                            aria-hidden="true"
+                            className="pl-12 pr-8 py-6 border-l border-border-subtle flex items-center shrink-0"
+                          >
+                            <img
+                              src="/assets/figma/icon-change-black.svg"
+                              alt=""
+                              width={24}
+                              height={24}
+                              className="w-24 h-24 -m-2 max-w-none"
+                            />
+                          </Box>
+                        </Cluster>
                       </motion.div>
                     ) : (
                       <motion.button
@@ -262,15 +266,15 @@ export function OutfitTurnItem({
                         animate="visible"
                         exit="exit"
                         onClick={() => onPickSelfie(turn.id)}
-                        className="stack-cell w-full min-h-236 rounded-slot border border-dashed border-border-glass bg-surface-tile hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
+                        className="stack-cell w-full h-228 rounded-slot border border-dashed border-border-glass bg-surface-tile hover:bg-surface-tile-hover flex flex-col items-center justify-center gap-16 press-scale motion-reduce:transition-none"
                       >
-                        <span className="p-6 rounded-pill bg-surface flex items-center justify-center shadow-bubble shrink-0">
+                        <span className="w-32 h-32 pb-2 rounded-pill bg-surface-glass border border-border-glass-soft flex items-center justify-center overflow-hidden shrink-0">
                           <img
-                            src="/assets/figma/icon-add-slot.svg"
+                            src="/assets/figma/icon-upload-white.svg"
                             alt=""
-                            width={20}
-                            height={20}
-                            className="w-20 h-20"
+                            width={24}
+                            height={24}
+                            className="w-24 h-24 max-w-none"
                           />
                         </span>
                         <span className="text-body text-ink-inverse tracking-xs text-center leading-none">
@@ -307,51 +311,50 @@ export function OutfitTurnItem({
                   >
                     <motion.div
                       variants={blurScaleVariants}
-                      className="flex flex-col gap-5 items-start max-w-full min-w-0"
+                      className="flex flex-col gap-5 w-full min-w-0 items-start"
                     >
                       <span className="text-micro text-ink-inverse">
                         Coach AI
                       </span>
-                    </motion.div>
-
-                    {OUTFIT_MATCH_REPLY.bags &&
-                      OUTFIT_MATCH_REPLY.bags.length > 0 && (
-                        <motion.div
-                          variants={staggerCardsVariants}
-                          className="flex flex-row gap-8 w-full min-w-0 overflow-x-auto no-scrollbar py-2"
-                        >
-                          {OUTFIT_MATCH_REPLY.bags.map((bag) => (
-                            <motion.button
-                              key={bag.id}
-                              type="button"
-                              variants={blurScaleVariants}
-                              onClick={() => onInspectBag?.(bag)}
-                              className="w-132 shrink-0 bg-surface rounded-card overflow-hidden flex flex-col text-left press-scale motion-reduce:transition-none shadow-bubble"
-                            >
-                              <LayerGrid className="w-full h-176 bg-surface-muted overflow-hidden">
+                      {OUTFIT_MATCH_REPLY.bags &&
+                        OUTFIT_MATCH_REPLY.bags.length > 0 && (
+                          <motion.div
+                            variants={staggerCardsVariants}
+                            className="flex flex-row gap-8 w-full min-w-0 overflow-x-auto no-scrollbar pb-2"
+                          >
+                            {OUTFIT_MATCH_REPLY.bags.map((bag) => (
+                              <motion.button
+                                key={bag.id}
+                                type="button"
+                                variants={blurScaleVariants}
+                                onClick={() => onInspectBag?.(bag)}
+                                className="w-132 shrink-0 bg-surface rounded-card overflow-hidden flex flex-col text-left press-scale motion-reduce:transition-none shadow-bubble"
+                              >
+                                <LayerGrid className="w-full h-176 bg-surface-muted overflow-hidden">
+                                  <img
+                                    src={bag.image}
+                                    alt={bag.name}
+                                    className="stack-cell w-full h-176 object-cover"
+                                  />
+                                </LayerGrid>
                                 <img
-                                  src={bag.image}
-                                  alt={bag.name}
-                                  className="stack-cell w-full h-176 object-cover"
+                                  src="/assets/figma/card-slider-bar.svg"
+                                  alt=""
+                                  className="w-full h-2 object-cover"
                                 />
-                              </LayerGrid>
-                              <img
-                                src="/assets/figma/card-slider-bar.svg"
-                                alt=""
-                                className="w-full h-2 object-cover"
-                              />
-                              <Stack className="p-10 gap-4 bg-surface w-full">
-                                <p className="text-caption text-ink truncate m-0">
-                                  {bag.name}
-                                </p>
-                                <p className="text-caption text-ink tabular-nums m-0">
-                                  {bag.priceFormatted}
-                                </p>
-                              </Stack>
-                            </motion.button>
-                          ))}
-                        </motion.div>
-                      )}
+                                <Stack className="p-10 gap-4 bg-surface w-full">
+                                  <p className="text-caption text-ink truncate m-0">
+                                    {bag.name}
+                                  </p>
+                                  <p className="text-caption text-ink tabular-nums m-0">
+                                    {bag.priceFormatted}
+                                  </p>
+                                </Stack>
+                              </motion.button>
+                            ))}
+                          </motion.div>
+                        )}
+                    </motion.div>
 
                     {OUTFIT_MATCH_REPLY.leadParagraphs.length > 0 && (
                       <motion.div
@@ -377,18 +380,18 @@ export function OutfitTurnItem({
                       variants={blurScaleVariants}
                       className="flex flex-col gap-12 items-start max-w-full min-w-0"
                     >
-                      <Cluster className="gap-10 pt-2">
+                      <Cluster className="gap-5 pt-2">
                         <span className="text-micro text-ink-inverse">
                           How was my answer?
                         </span>
-                        <Cluster className="gap-4">
+                        <Cluster>
                           <button
                             type="button"
                             aria-label="Helpful outfit match"
                             aria-pressed={turn.feedback === "up"}
                             onClick={() => onFeedback(turn.id, "up")}
                             className={clsx(
-                              "w-36 h-36 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
+                              "w-34 h-34 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
                               turn.feedback === "up"
                                 ? "bg-surface/25"
                                 : "hover:bg-surface/10",
@@ -397,9 +400,9 @@ export function OutfitTurnItem({
                             <img
                               src="/assets/figma/icon-thumb-up.svg"
                               alt=""
-                              width={18}
-                              height={18}
-                              className="w-18 h-18"
+                              width={24}
+                              height={24}
+                              className="w-24 h-24"
                             />
                           </button>
                           <button
@@ -408,7 +411,7 @@ export function OutfitTurnItem({
                             aria-pressed={turn.feedback === "down"}
                             onClick={() => onFeedback(turn.id, "down")}
                             className={clsx(
-                              "w-36 h-36 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
+                              "w-34 h-34 rounded-pill flex items-center justify-center press-scale motion-reduce:transition-none",
                               turn.feedback === "down"
                                 ? "bg-surface/25"
                                 : "hover:bg-surface/10",
@@ -417,9 +420,9 @@ export function OutfitTurnItem({
                             <img
                               src="/assets/figma/icon-thumb-down.svg"
                               alt=""
-                              width={18}
-                              height={18}
-                              className="w-18 h-18"
+                              width={24}
+                              height={24}
+                              className="w-24 h-24"
                             />
                           </button>
                         </Cluster>
@@ -439,14 +442,11 @@ export function OutfitTurnItem({
                             variants={blurScaleVariants}
                             initial={matchedAlreadySeen ? false : "hidden"}
                             animate="visible"
-                            className="w-full flex flex-col items-end gap-8 pt-4"
+                            className="w-full flex flex-col items-center gap-10 pt-4"
                           >
-                            <span className="text-micro text-ink-inverse">
-                              Pick an option
-                            </span>
                             <motion.div
                               variants={staggerCardsVariants}
-                              className="flex flex-row gap-6 w-full items-stretch"
+                              className="flex flex-row gap-10 w-full items-stretch"
                             >
                               {OUTFIT_MATCH_REPLY.options.map((opt) => {
                                 const isSelected =
@@ -470,10 +470,10 @@ export function OutfitTurnItem({
                                     <img
                                       src="/assets/figma/icon-ai-white.svg"
                                       alt=""
-                                      width={18}
-                                      height={18}
+                                      width={20}
+                                      height={20}
                                       className={clsx(
-                                        "w-18 h-18 shrink-0 transition-icon-invert motion-reduce:transition-none",
+                                        "w-20 h-20 shrink-0 transition-icon-invert motion-reduce:transition-none",
                                         isSelected && "invert scale-105",
                                       )}
                                     />
@@ -484,6 +484,9 @@ export function OutfitTurnItem({
                                 );
                               })}
                             </motion.div>
+                            <span className="text-micro text-ink-inverse text-center">
+                              Pick an option to keep chatting
+                            </span>
                           </motion.div>
                         </div>
                       )}

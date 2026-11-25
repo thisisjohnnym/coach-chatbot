@@ -1,6 +1,4 @@
 import {
-  lazy,
-  Suspense,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -40,7 +38,6 @@ import { PlpListing } from "./components/PlpListing";
 import type { StoriesSpotAction } from "./components/ContentSpotStories";
 import { ClosedFloatingOverlay } from "./components/ClosedFloatingOverlay";
 import { AssistantSheetShell } from "./components/AssistantSheetShell";
-import type { OrbStageState } from "./components/LiquidOrb";
 import { ColdStartView } from "./components/ColdStartView";
 import {
   ChatThreadView,
@@ -53,17 +50,20 @@ import type { OutfitThreadTurn } from "./components/OutfitFlowView";
 import { ProductPickerModal } from "./components/ProductPickerModal";
 import { ProductDetailModal } from "./components/ProductDetailModal";
 
-const LiquidOrb = lazy(async () => {
-  const mod = await import("./components/LiquidOrb");
-  return { default: mod.LiquidOrb };
-});
-
 type ActiveSheetView = "cold-start" | "exiting-cold-start" | "thread" | "transitioning-reset";
 
 interface ActivePickerTarget {
   turnId: string;
   slot: "A" | "B";
 }
+
+const COLD_START_STAGE_HEIGHT = 320;
+const PRE_ANSWER_STAGE_HEIGHT = 176;
+// +20.5% stage height over the original 488px Figma frame so more chat content fits while remaining phone-safe via viewport clamping
+const THREAD_STAGE_HEIGHT = 588;
+const MIN_STAGE_HEIGHT = 180;
+// Reserves header (~61px) + dock (~97–123px w/ iOS safe area) + >=44px top scrim tap target
+const SHEET_CHROME_AND_SCRIM_RESERVE = 228;
 
 const VOICE_SAMPLE_PROMPTS = [
   STATEMENT_PROMPT,
@@ -123,11 +123,9 @@ export function App() {
   const [floatingVisible, setFloatingVisible] = useState(true);
   const [isInitialOpenStagger, setIsInitialOpenStagger] = useState(true);
   const [enteredFromColdStart, setEnteredFromColdStart] = useState(true);
-  const [isInitialExchange, setIsInitialExchange] = useState(true);
   const [activeView, setActiveView] = useState<ActiveSheetView>("cold-start");
   const [isTypingFocused, setIsTypingFocused] = useState(false);
   const [isExpandingFromSubmit, setIsExpandingFromSubmit] = useState(false);
-  const [orbBloomKey, setOrbBloomKey] = useState(1);
   const [craftSessionId, setCraftSessionId] = useState(1);
   const [selectedStarterId, setSelectedStarterId] = useState<StarterAction["id"] | null>(
     null
@@ -278,13 +276,6 @@ export function App() {
   }, [sheetOpen, shouldShowRecoveryPill]);
 
   const firstTurn = turns[0];
-  const isFirstTurnActiveThinking =
-    turns.length === 1 &&
-    Boolean(firstTurn) &&
-    ((firstTurn.kind === "chat" && firstTurn.status === "thinking") ||
-      (firstTurn.kind === "compare" && firstTurn.stage === "loading") ||
-      (firstTurn.kind === "outfit" && firstTurn.stage === "loading"));
-
   const isFirstTurnPreAnswer =
     turns.length === 1 &&
     Boolean(firstTurn) &&
@@ -294,30 +285,21 @@ export function App() {
       (firstTurn.kind === "outfit" &&
         (firstTurn.stage === "loading" || firstTurn.stage === "exiting-loading")));
 
-  // Persistent LiquidOrb state:
-  // - "hero" on Cold Start (when typing is focused, hiddenForTyping fades it gently in place with zero blur stall)
-  // - "thinking" as Cold Start exits & during initial thinking/loading (glides smoothly upward, never unmounts)
-  // - "receded" during exiting-thinking / exiting-loading / answered / selecting / compared / reset
-  const orbStageState: OrbStageState =
-    activeView === "cold-start"
-      ? "hero"
-      : activeView === "exiting-cold-start" ||
-          (isInitialExchange && activeView === "thread" && isFirstTurnActiveThinking)
-        ? "thinking"
-        : "receded";
-
   const showNewChat = activeView === "thread" && !isTypingFocused;
 
   const rawStageHeight =
     activeView === "cold-start" ||
     activeView === "exiting-cold-start" ||
     activeView === "transitioning-reset"
-      ? 492
+      ? COLD_START_STAGE_HEIGHT
       : isFirstTurnPreAnswer && !enteredFromColdStart
-      ? 320
-      : 488;
+      ? PRE_ANSWER_STAGE_HEIGHT
+      : THREAD_STAGE_HEIGHT;
 
-  const availableStageHeight = Math.max(180, viewportHeight - 220);
+  const availableStageHeight = Math.max(
+    MIN_STAGE_HEIGHT,
+    viewportHeight - SHEET_CHROME_AND_SCRIM_RESERVE
+  );
   const restingStageHeight = Math.min(rawStageHeight, availableStageHeight);
   const stageHeight = isTypingFocused ? FOCUSED_TYPING_STAGE_HEIGHT : restingStageHeight;
 
@@ -367,7 +349,6 @@ export function App() {
       anchorChoiceGroupKey?: string;
       fromColdStart: boolean;
       openingSheetNow?: boolean;
-      withThinkingOrb?: boolean;
       preselectedA?: BagProduct | null;
       preselectedB?: BagProduct | null;
     }) => {
@@ -382,7 +363,6 @@ export function App() {
         anchorChoiceGroupKey,
         fromColdStart,
         openingSheetNow = false,
-        withThinkingOrb,
         preselectedA = null,
         preselectedB = null,
       } = options;
@@ -418,7 +398,6 @@ export function App() {
       };
 
       setEnteredFromColdStart(fromColdStart);
-      setIsInitialExchange(withThinkingOrb ?? (!isDirectPair && replaceThread));
       setIsInitialOpenStagger(openingSheetNow);
       setActiveView("thread");
       setFloatingVisible(false);
@@ -429,11 +408,10 @@ export function App() {
         return;
       }
 
-      // Let Loading entrance settle, then AnimatePresence mode="wait" exits Loading in sync with Orb before mounting Compare Slots!
+      // Let Loading entrance settle, then AnimatePresence mode="wait" exits Loading before mounting Compare Slots.
       const openOffset = openingSheetNow ? 280 : 0;
       const startExitAt = openOffset + 1280;
       scheduleTimer(() => {
-        setIsInitialExchange(false);
         setTurns((prev) =>
           prev.map((t): ThreadTurn =>
             t.id === turnId && t.kind === "compare"
@@ -454,7 +432,6 @@ export function App() {
       anchorChoiceGroupKey?: string;
       fromColdStart: boolean;
       openingSheetNow?: boolean;
-      withThinkingOrb?: boolean;
     }) => {
       const {
         replaceThread,
@@ -463,7 +440,6 @@ export function App() {
         anchorChoiceGroupKey,
         fromColdStart,
         openingSheetNow = false,
-        withThinkingOrb,
       } = options;
 
       if (replaceThread) {
@@ -485,7 +461,6 @@ export function App() {
       };
 
       setEnteredFromColdStart(fromColdStart);
-      setIsInitialExchange(withThinkingOrb ?? replaceThread);
       setIsInitialOpenStagger(openingSheetNow);
       setActiveView("thread");
       setFloatingVisible(false);
@@ -495,7 +470,6 @@ export function App() {
       const openOffset = openingSheetNow ? 280 : 0;
       const startExitAt = openOffset + 1280;
       scheduleTimer(() => {
-        setIsInitialExchange(false);
         setTurns((prev) =>
           prev.map((t): ThreadTurn =>
             t.id === turnId && t.kind === "outfit"
@@ -517,7 +491,6 @@ export function App() {
         anchorChoiceGroupKey?: string;
         fromColdStart: boolean;
         openingSheetNow: boolean;
-        withThinkingOrb: boolean;
       }
     ) => {
       const {
@@ -526,7 +499,6 @@ export function App() {
         anchorChoiceGroupKey,
         fromColdStart,
         openingSheetNow,
-        withThinkingOrb,
       } = options;
 
       if (replaceThread) {
@@ -547,7 +519,6 @@ export function App() {
       };
 
       setEnteredFromColdStart(fromColdStart);
-      setIsInitialExchange(withThinkingOrb);
       setIsInitialOpenStagger(openingSheetNow);
       setActiveView("thread");
       setFloatingVisible(false);
@@ -557,11 +528,8 @@ export function App() {
       const openOffset = openingSheetNow ? 280 : 0;
       const startExitAt = openOffset + 1200;
 
-      // AnimatePresence mode="wait" exits Thinking in sync with Orb before cascading Answer!
+      // AnimatePresence mode="wait" exits Thinking before cascading Answer.
       scheduleTimer(() => {
-        if (withThinkingOrb) {
-          setIsInitialExchange(false);
-        }
         const reply = getCannedReplyForPrompt(trimmed);
         setTurns((prev) =>
           prev.map((t): ThreadTurn =>
@@ -588,7 +556,6 @@ export function App() {
         anchorChoiceGroupKey?: string;
         fromColdStart?: boolean;
         openingSheetNow?: boolean;
-        withThinkingOrb?: boolean;
       }
     ) => {
       const trimmed = rawPrompt.trim();
@@ -599,7 +566,6 @@ export function App() {
       const anchorChoiceGroupKey = options?.anchorChoiceGroupKey;
       const fromColdStart = options?.fromColdStart ?? enteredFromColdStart;
       const openingSheetNow = options?.openingSheetNow ?? false;
-      const withThinkingOrb = options?.withThinkingOrb ?? false;
 
       const wasTypingFocused = isTypingFocusedRef.current;
       if (wasTypingFocused) {
@@ -662,7 +628,6 @@ export function App() {
           anchorChoiceGroupKey,
           fromColdStart,
           openingSheetNow,
-          withThinkingOrb,
         });
       };
 
@@ -672,7 +637,6 @@ export function App() {
         sheetOpen &&
         !wasTypingFocused
       ) {
-        setIsInitialExchange(withThinkingOrb);
         setActiveView("exiting-cold-start");
         scheduleTimer(runDispatch, COLD_START_SETTLE_MS);
         return;
@@ -703,7 +667,6 @@ export function App() {
       setDetailBag(null);
       setSelectedStarterId(null);
       setCraftSessionId((s) => s + 1);
-      setOrbBloomKey((k) => k + 1);
       setFloatingVisible(false);
 
       const trimmedPrompt = prompt?.trim();
@@ -727,7 +690,6 @@ export function App() {
             interactionMode: "interactive-slots",
             fromColdStart: false,
             openingSheetNow: true,
-            withThinkingOrb: true,
             preselectedA: recentlyViewedBags[0],
             preselectedB: recentlyViewedBags[1],
           });
@@ -738,7 +700,6 @@ export function App() {
           replaceThread: true,
           fromColdStart: false,
           openingSheetNow: true,
-          withThinkingOrb: true,
         });
         return;
       }
@@ -747,7 +708,6 @@ export function App() {
       resetSeenChatTurnIds();
       setTurns([]);
       setEnteredFromColdStart(true);
-      setIsInitialExchange(true);
       setIsInitialOpenStagger(true);
       setActiveView("cold-start");
       setSheetOpen(true);
@@ -766,7 +726,6 @@ export function App() {
       setDetailBag(null);
       setSelectedStarterId(null);
       setCraftSessionId((s) => s + 1);
-      setOrbBloomKey((k) => k + 1);
       setFloatingVisible(false);
 
       if (action.kind === "prompt") {
@@ -774,7 +733,6 @@ export function App() {
           replaceThread: true,
           fromColdStart: false,
           openingSheetNow: true,
-          withThinkingOrb: true,
         });
       } else if (action.kind === "outfit") {
         enqueueOutfitTurn({
@@ -783,7 +741,6 @@ export function App() {
           showUserBubble: true,
           fromColdStart: false,
           openingSheetNow: true,
-          withThinkingOrb: true,
         });
       } else if (action.kind === "compare") {
         const compareCopy = getCompareSpotCopy(action.pair);
@@ -796,7 +753,6 @@ export function App() {
           interactionMode: "interactive-slots",
           fromColdStart: false,
           openingSheetNow: true,
-          withThinkingOrb: true,
           preselectedA: action.pair[0],
           preselectedB: action.pair[1],
         });
@@ -804,7 +760,6 @@ export function App() {
         resetSeenChatTurnIds();
         setTurns([]);
         setEnteredFromColdStart(true);
-        setIsInitialExchange(true);
         setIsInitialOpenStagger(true);
         setActiveView("cold-start");
         setSheetOpen(true);
@@ -822,21 +777,18 @@ export function App() {
     setPickerTarget(null);
     setDetailBag(null);
     setSelectedStarterId(null);
-    setIsInitialExchange(false);
 
     // Step 1: Exit active thread + New Chat pill FIRST (opacity + blur + scale)
     setActiveView("transitioning-reset");
 
-    // Step 2: Only AFTER old stage has completely exited, bloom Orb + Cold Start cleanly!
+    // Step 2: Only AFTER old stage has completely exited, mount Cold Start cleanly.
     scheduleTimer(() => {
       resetSeenChatTurnIds();
       setTurns([]);
       setInputValue("");
       setEnteredFromColdStart(true);
-      setIsInitialExchange(true);
       setIsInitialOpenStagger(false);
       setCraftSessionId((s) => s + 1);
-      setOrbBloomKey((k) => k + 1);
       setActiveView("cold-start");
     }, EXIT_SETTLE_MS);
   }, [clearPendingTimers, scheduleTimer]);
@@ -877,9 +829,7 @@ export function App() {
       }
       setSelectedStarterId(null);
       setCraftSessionId((s) => s + 1);
-      setOrbBloomKey((k) => k + 1);
       setEnteredFromColdStart(true);
-      setIsInitialExchange(true);
       setIsInitialOpenStagger(true);
       setActiveView("cold-start");
       setSheetOpen(true);
@@ -901,9 +851,7 @@ export function App() {
       }
       setSelectedStarterId(null);
       setCraftSessionId((s) => s + 1);
-      setOrbBloomKey((k) => k + 1);
       setEnteredFromColdStart(true);
-      setIsInitialExchange(true);
       setIsInitialOpenStagger(true);
       setActiveView("cold-start");
       setSheetOpen(true);
@@ -914,9 +862,7 @@ export function App() {
     (action: StarterAction) => {
       clearPendingTimers();
       setSelectedStarterId(action.id);
-      setIsInitialExchange(true);
       // Step 1: Cold Start exits in place with opacity + blur + scale (no morphing into chat pills)
-      // while the persistent LiquidOrb glides smoothly upward!
       setActiveView("exiting-cold-start");
 
       // Step 2: Once Cold Start finishes exiting (zero overlap!), enter the chat pill & typing indicator
@@ -936,7 +882,6 @@ export function App() {
             replaceThread: true,
             fromColdStart: true,
             openingSheetNow: false,
-            withThinkingOrb: true,
           });
         }
       }, COLD_START_SETTLE_MS);
@@ -979,7 +924,6 @@ export function App() {
         anchorChoiceGroupKey: `${turnId}:options`,
         fromColdStart: true,
         openingSheetNow: false,
-        withThinkingOrb: false,
       });
     },
     [submitPrompt, turns]
@@ -1046,7 +990,6 @@ export function App() {
           showUserBubble: true,
           fromColdStart: !openingFromStorefront,
           openingSheetNow: openingFromStorefront,
-          withThinkingOrb: openingFromStorefront,
           preselectedA: bag,
         });
       }, 220);
@@ -1076,39 +1019,6 @@ export function App() {
       }, EXIT_SETTLE_MS);
     },
     [pickerTarget, scheduleTimer]
-  );
-
-  const handleEditCompareChoices = useCallback(
-    (turnId: string) => {
-      const targetTurn = turns.find((t) => t.id === turnId);
-      if (!targetTurn || targetTurn.kind !== "compare") return;
-
-      if (
-        targetTurn.stage === "compared" ||
-        targetTurn.confirmSelectedOptions.length > 0
-      ) {
-        setPickerTarget({ turnId, slot: "A" });
-        return;
-      }
-
-      setTurns((prev) =>
-        prev.map((t): ThreadTurn =>
-          t.id === turnId && t.kind === "compare"
-            ? {
-                ...t,
-                slotA: null,
-                slotB: null,
-                stage: "selecting" as const,
-                confirmSelectedOptions: [],
-              }
-            : t
-        )
-      );
-      scheduleTimer(() => {
-        setPickerTarget({ turnId, slot: "A" });
-      }, EXIT_SETTLE_MS);
-    },
-    [scheduleTimer, turns]
   );
 
   const handleConfirmCompare = useCallback((turnId: string) => {
@@ -1156,7 +1066,6 @@ export function App() {
         showUserBubble: hasContentBelow,
         anchorChoiceGroupKey: `${turnId}:confirm`,
         fromColdStart: true,
-        withThinkingOrb: false,
       });
     },
     [submitPrompt, turns]
@@ -1190,7 +1099,6 @@ export function App() {
         showUserBubble: hasTurnsBelow,
         anchorChoiceGroupKey: `${turnId}:followup`,
         fromColdStart: true,
-        withThinkingOrb: false,
       });
     },
     [submitPrompt, turns]
@@ -1228,7 +1136,6 @@ export function App() {
         showUserBubble: hasTurnsBelow,
         anchorChoiceGroupKey: `${turnId}:followup`,
         fromColdStart: true,
-        withThinkingOrb: false,
       });
     },
     [submitPrompt, turns]
@@ -1243,7 +1150,6 @@ export function App() {
         replaceThread: false,
         showUserBubble: hasTurnsBelow,
         fromColdStart: true,
-        withThinkingOrb: false,
       });
     },
     [submitPrompt, turns]
@@ -1379,8 +1285,6 @@ export function App() {
                       ? true
                       : enteredFromColdStart,
                   openingSheetNow: false,
-                  withThinkingOrb:
-                    activeView === "cold-start" || activeView === "exiting-cold-start",
                 })
               }
               onVoiceSample={handleVoiceSample}
@@ -1398,18 +1302,6 @@ export function App() {
               }
             >
               <LayerGrid className="w-full h-full min-h-0 grid-rows-1 overflow-visible">
-                {/* Persistent WebGL LiquidOrb (Forge glass bead): Motion owns glide / blur exit */}
-                <Layer className="self-start w-full pointer-events-none z-10 overflow-visible">
-                  <Suspense fallback={null}>
-                    <LiquidOrb
-                      stageState={orbStageState}
-                      bloomKey={orbBloomKey}
-                      staggerEntrance={isInitialOpenStagger}
-                      hiddenForTyping={isTypingFocused}
-                    />
-                  </Suspense>
-                </Layer>
-
                 {/* Stage Views: strict mode="wait" guarantees exiting view finishes before next view enters */}
                 <Layer className="w-full h-full min-h-0 z-20 overflow-visible">
                   <LayerGrid className="w-full h-full min-h-0 grid-rows-1 overflow-visible">
@@ -1492,10 +1384,7 @@ export function App() {
                             y: 12,
                             transition: { duration: DURATION_EXIT, ease: EASE_PREMIUM },
                           }}
-                          className={clsx(
-                            "stack-cell w-full h-full min-h-0 overflow-visible transition-stage-inset motion-reduce:transition-none will-change-transform",
-                            orbStageState === "thinking" ? "pt-144" : "pt-0"
-                          )}
+                          className="stack-cell w-full h-full min-h-0 overflow-visible will-change-transform"
                         >
                           <ChatThreadView
                             turns={turns}
@@ -1510,7 +1399,6 @@ export function App() {
                             onViewBagDetails={handleViewBagDetails}
                             onPickSelfie={handlePickSelfie}
                             onOpenComparePicker={handleOpenComparePicker}
-                            onEditCompareChoices={handleEditCompareChoices}
                             onConfirmCompare={handleConfirmCompare}
                             onConfirmCompareSomethingElse={handleConfirmCompareSomethingElse}
                             onCompareFeatures={handleCompareFeatures}
