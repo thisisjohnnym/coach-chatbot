@@ -260,7 +260,7 @@ function PromptCardsAdBody({
               <button
                 type="button"
                 onClick={() => onOpenAssistant(mode, floatingPrompts[0])}
-                className="pointer-events-auto flex-1 min-w-0 max-w-181 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale motion-reduce:transition-none"
+                className="pointer-events-auto flex-1 min-w-0 max-w-181 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale animate-ad-prompt-float-1 motion-reduce:transition-none"
               >
                 <img
                   src="/assets/figma/sparkle-black.svg"
@@ -279,7 +279,7 @@ function PromptCardsAdBody({
               <button
                 type="button"
                 onClick={() => onOpenAssistant(mode, floatingPrompts[1])}
-                className="pointer-events-auto flex-1 min-w-0 max-w-181 mt-72 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale motion-reduce:transition-none"
+                className="pointer-events-auto flex-1 min-w-0 max-w-181 mt-72 bg-surface p-8 rounded-bubble shadow-ad-prompt flex flex-col items-start gap-10 text-left press-scale animate-ad-prompt-float-2 motion-reduce:transition-none"
               >
                 <img
                   src="/assets/figma/sparkle-black.svg"

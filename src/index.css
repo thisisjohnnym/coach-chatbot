@@ -351,6 +351,32 @@
   animation: typing-dot-bounce 1.2s ease-in-out 0.32s infinite;
 }
 
+@keyframes ad-prompt-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@utility animate-ad-prompt-float-1 {
+  animation: ad-prompt-float 4.6s ease-in-out infinite;
+  will-change: transform;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility animate-ad-prompt-float-2 {
+  animation: ad-prompt-float 4.6s ease-in-out -1.55s infinite;
+  will-change: transform;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 /* Subtle custom scrollbars inside sheet */
 @utility no-scrollbar {
   scrollbar-width: none;
